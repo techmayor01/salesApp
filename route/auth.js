@@ -4476,7 +4476,7 @@ router.get("/register", (req,res)=>{
 
 
 router.post("/register", (req, res) => {
-  const { username, password, role, branch_name } = req.body;
+  const { username, password, role, branch_name, branch_address } = req.body;
 
   User.findOne({ username: username })
     .then(existingUser => {
@@ -4502,6 +4502,7 @@ router.post("/register", (req, res) => {
               // Create branch and reference the user
               const newBranch = new Branch({
                 branch_name,
+                branch_address,
                 createdBy: savedUser._id
               });
 
