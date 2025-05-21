@@ -1,0 +1,103 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="lg:w-[220px] lg:p-4">
+          <%- include ('../partials/sidebar') %>
+        </div>
+        <main
+          class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200">
+          <div class="max-w-6xl mx-auto mt-6">
+            <!-- Card -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <!-- Table Header -->
+              <div
+                class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <div>
+                  <h2 class="text-2xl font-semibold text-gray-800">
+                    Suppliers List
+                  </h2>
+                  <p class="text-sm text-gray-500">
+                    Export or manage supplier information
+                  </p>
+                </div>
+              </div>
+
+              <!-- Table -->
+              <div class="">
+                <div class="w-full overflow-x-auto lg:overflow-x-visible">
+                  <table
+                    id="suppliersTable"
+                    class="min-w-full px-1 text-sm text-left bg-white border border-gray-200 rounded-lg shadow-sm">
+                    
+                    <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                      <tr>
+                        <th class="px-4 py-3 border-b border-gray-200">Supplier</th>
+                        <th class="px-4 py-3 border-b border-gray-200">Contact Person</th>
+                        <th class="px-4 py-3 border-b border-gray-200">Email</th>
+                        <th class="px-4 py-3 border-b border-gray-200">Phone</th>
+                        <th class="px-4 py-3 border-b border-gray-200">Address</th>
+                        <% if (user.role === 'owner' || user.role === 'admin') { %>
+                          <th class="px-4 py-3 border-b border-gray-200">Actions</th>
+                        <% } %>
+                      </tr>
+                    </thead>
+              
+                    <tbody class="text-gray-700 divide-y divide-gray-100">
+                      <% suppliers.forEach(supplier => { %>
+                        <tr class="hover:bg-gray-50 even:bg-gray-50 transition">
+                          <td class="px-4 py-3"><%= supplier.supplier %></td>
+                          <td class="px-4 py-3"><%= supplier.contact_person %></td>
+                          <td class="px-4 py-3"><%= supplier.email %></td>
+                          <td class="px-4 py-3"><%= supplier.phone %></td>
+                          <td class="px-4 py-3"><%= supplier.address %></td>
+                          
+                          <% if (user.role === 'owner' || user.role === 'admin') { %>
+                            <td class="px-4 py-3">
+                              <div class="flex space-x-2">
+                             
+                                <a href="/editSuppliers/<%=supplier._id%>" class="bg-blue-500 text-white px-2 py-1 rounded-md">
+                                  <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <a href="/delete/<%=supplier._id%>" class="bg-red-500 text-white px-2 py-1 rounded-md">
+                                 <i class="fa-solid fa-trash"></i>
+                                </a>
+                              </div>
+                            </td>
+                          <% } %>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+          </div>
+          <%- include ('../partials/footer') %>
+        </main>
+      </div>
+    </div>
+    <!-- DataTables Script -->
+<script>
+  $(document).ready(function () {
+    $("#suppliersTable").DataTable({
+      responsive: true,
+      scrollX: true,
+      dom: "Bfrtip",
+      buttons: ["copy", "excel", "csv", "pdf", "print"],
+      language: {
+        searchPlaceholder: "Search suppliers...",
+        search: "",
+      },
+    });
+  });
+</script>
+</script>
+  </body>
+</html>

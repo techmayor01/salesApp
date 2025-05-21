@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include ('../partials/head') %>
+<body>
+   <div class="relative flex flex-col min-h-screen bg-slate-200">
+     <%- include ('../partials/header') %>
+
+    <div class="flex flex-row">
+        <div class="w-[220px] p-4"><%- include ('../partials/sidebar') %></div>
+        <main
+          class="cal relative top-16 p-4 overflow-auto"
+          style="width: calc(100% - 220px)">
+            <div class="flex flex-row justify-between items-center">
+                <h1 class="text-2xl font-semibold text-gray-600">Add Loaner</h1>
+            </div>
+
+           <!-- Form Fields -->
+        <form action="/addLoaner" method="post" class="mt-4 space-y-4 text-sm bg-white p-6 border border-gray-200">
+            <div class="flex flex-col justify-between items-start">
+                <h1 class="text-2xl font-semibold">Add Loaner</h1>
+                <p class="text-xs text-gray-400 py-2">use this form to add loaner to database..</p>
+            </div>
+            <!-- Supplier Name -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Loaner <span class="text-red-500">*</span></label>
+                <input type="text" name="loaner" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Loaner">
+            </div>
+
+            <!-- Contact Person -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Mobile <span class="text-red-500">*</span></label>
+                <input type="tel" name="mobile" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Mobile">
+            </div>
+
+
+            <!-- Address -->
+            <div class="grid grid-cols-3 items-start">
+                <label class="text-gray-700 text-sm">Address</label>
+                <input name="address" class="col-span-2 border-b border-gray-400 py-2 w-full" rows="3" placeholder="Address"/>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-center items-center ">
+                <button class="bg-[#3e70c9]  text-white px-3 py-1 text-sm hover:bg-blue-700">Add Loaner</button>
+            </div>
+        </form>
+        </main>
+    </div>
+
+   </div>
+</body>
+</html>

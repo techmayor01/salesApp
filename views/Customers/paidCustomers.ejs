@@ -1,0 +1,93 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="w-[220px] p-4"><%- include ('../partials/sidebar') %></div>
+        <main
+          class="cal relative top-16 p-4 overflow-auto"
+          style="width: calc(100% - 220px)">
+          <div class="flex flex-row justify-between items-center">
+            <h1 class="text-2xl font-semibold">Paid Customers Invoices List</h1>
+          </div>
+
+          <!-- Table -->
+          <div class="max-w-6xl mx-auto bg-white p-6">
+            <!-- Table Title -->
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">
+              Exporting Paid Customers Invoices Data
+            </h2>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table
+              id="suppliersTable"
+              class="stripe hover w-full text-left text-sm border-collapse">
+              <thead>
+                <tr class="font-semibold text-gray-700 border border-gray-200">
+                  <th class="p-3 border border-gray-200">No</th>
+                  <th class="p-3 border border-gray-200">Customers</th>
+                  <th class="p-3 border border-gray-200">Mobile</th>
+                  <th class="p-3 border border-gray-200">Email</th>
+                  <th class="p-3 border border-gray-200">Total Amount</th>
+                  <th class="p-3 border border-gray-200">Paid Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (customers.length > 0) { %>
+                  <% customers.forEach((customer, index) => { 
+                       const totalAmount = customer.transactions.reduce((sum, t) => sum + t.total, 0);
+                       const paidAmount = customer.transactions.reduce((sum, t) => sum + t.paid_amount, 0);
+                  %>
+                    <tr class="border-t">
+                      <td class="p-3 border border-gray-200"><%= index + 1 %></td>
+                      <td class="p-3 border border-gray-200"><%= customer.customer_name %></td>
+                      <td class="p-3 border border-gray-200"><%= customer.mobile %></td>
+                      <td class="p-3 border border-gray-200"><%= customer.email %></td>
+                      <td class="p-3 border border-gray-200"><%= totalAmount.toFixed(2) %></td>
+                      <td class="p-3 border border-gray-200"><%= paidAmount.toFixed(2) %></td>
+                    
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr class="border-t">
+                    <td colspan="7" class="text-center p-3">No fully paid customers found.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+              <tfoot>
+                <% if (customers.length > 0) { %>
+                  <tr class="font-semibold">
+                    <td colspan="4" class="p-3 text-right border border-gray-200">Total:</td>
+                    <td class="p-3 border border-gray-200">
+                      <%= customers.reduce((sum, customer) => sum + customer.transactions.reduce((s, t) => s + t.total, 0), 0).toFixed(2) %>
+                    </td>
+                    <td class="p-3 border border-gray-200">
+                      <%= customers.reduce((sum, customer) => sum + customer.transactions.reduce((s, t) => s + t.paid_amount, 0), 0).toFixed(2) %>
+                    </td>
+                    <td></td>
+                  </tr>
+                <% } %>
+              </tfoot>
+            </table>
+            
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      $(document).ready(function () {
+        $("#suppliersTable").DataTable({
+          dom: "Bfrtip",
+          buttons: ["copy", "excel", "csv", "pdf", "print"],
+        });
+      });
+    </script>
+  </body>
+</html>

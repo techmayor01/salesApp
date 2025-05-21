@@ -1,0 +1,81 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="w-[220px] p-4"><%- include ('../partials/sidebar') %></div>
+        <main
+          class="cal relative top-16 p-4 overflow-auto"
+          style="width: calc(100% - 220px)">
+          <div class="flex flex-row justify-between items-center">
+            <h1 class="text-2xl font-semibold">Loaners List</h1>
+          </div>
+
+          <!-- Table -->
+          <div class="max-w-6xl mx-auto bg-white p-6">
+            <!-- Table Title -->
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">
+             Exporting Loaners Data
+            </h2>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table
+                id="suppliersTable"
+                class="stripe hover w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr
+                    class="font-semibold text-gray-700 border border-gray-200">
+                    <th class="p-3 border border-gray-200">No</th>
+                    <th class="p-3 border border-gray-200">Loaner</th>
+                    <th class="p-3 border border-gray-200">Mobile</th>
+                    <th class="p-3 border border-gray-200">Address</th>
+                    
+                    <th class="p-3 border border-gray-200">Option</th>
+                    
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (loaners.length > 0) { %>
+                    <% loaners.forEach((loaner, index) => { %>
+                      <tr class="border-t">
+                        <td class="p-3 border border-gray-200"><%= index + 1 %></td>
+                        <td class="p-3 border border-gray-200"><%= loaner.loaner %></td>
+                        <td class="p-3 border border-gray-200"><%= loaner.mobile %></td>
+                        <td class="p-3 border border-gray-200"><%= loaner.address %></td>
+                        <td class="p-3 border border-gray-200">
+                          <div class="flex space-x-2">
+                            <a href="/viewLoaner/<%=loaner._id%>" class="flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs hover:bg-green-200"><i class="fa-solid fa-eye"></i></a>
+                            <a href="/deleteLoaner/<%=loaner._id%>" class="flex items-center bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs hover:bg-red-200"><i class="fa-solid fa-trash"></i></a>
+                          </div>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr class="border-t text-center">
+                      <td colspan="5" class="p-3 border border-gray-200">No data available in table</td>
+                    </tr>
+                  <% } %>
+                </tbody>
+                
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      $(document).ready(function () {
+        $("#suppliersTable").DataTable({
+          dom: "Bfrtip",
+          buttons: ["copy", "excel", "csv", "pdf", "print"],
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include ('../partials/head') %>
+<body>
+   <div class="relative flex flex-col min-h-screen bg-slate-200">
+     <%- include ('../partials/header') %>
+
+    <div class="flex flex-row">
+        <div class="w-[220px] p-4"><%- include ('../partials/sidebar') %></div>
+        <main
+          class="cal relative top-16 p-4 overflow-auto"
+          style="width: calc(100% - 220px)">
+            <div class="flex flex-col justify-between items-start">
+                <h1 class="text-2xl font-semibold">Add Expenses</h1>
+               
+            </div>
+
+           <!-- Form Fields -->
+        <form action="/addExpenses" method="post" class="mt-4 space-y-4 text-sm bg-white p-6 border border-gray-200">
+            <!-- Supplier Name -->
+             <div class="flex flex-col justify-between items-start">
+                <h1 class="text-2xl font-semibold">Add Expenses</h1>
+                <p class="text-xs text-gray-400 py-2">use this form to add expenses to database..</p>
+            </div>
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Expenses <span class="text-red-500">*</span> </label>
+                <input type="text" name="title" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Expense Title">
+            </div>
+
+            
+            <!-- Submit Button -->
+            <div class="flex justify-center items-center ">
+                <button class="bg-[#3e70c9]  text-white px-3 py-1 text-sm hover:bg-blue-700">Add Expenses</button>
+            </div>
+        </form>
+        </main>
+    </div>
+
+   </div>
+</body>
+</html>

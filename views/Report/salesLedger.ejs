@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <!-- Sidebar -->
+        <div class=" p-1 bg-gray-100  shadow-md">
+          <%- include ('../partials/sidebar') %>
+        </div>
+      
+        <!-- Main Content -->
+        <main class="relative top-16 p-6 w-full overflow-auto bg-gray-50 rounded-tl-2xl transition-all duration-300" style="margin-left: 220px">
+          
+          <!-- Page Title -->
+          <div class="flex flex-row justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">Sales Report</h1>
+          </div>
+      
+          <!-- Toggle Buttons -->
+          <div class="ledger-toggle-group flex flex-wrap gap-4 mb-8 ">
+            <button class="ledger-toggle px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 hover:shadow-md transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-300" data-ledger="summary">Summary</button>
+            <button class="ledger-toggle px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 hover:shadow-md transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-300" data-ledger="detailed">Detailed</button>
+            <button class="ledger-toggle px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 hover:shadow-md transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-300" data-ledger="stock">Stock</button>
+            <button class="ledger-toggle px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 hover:shadow-md transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-300" data-ledger="customer">Customer</button>
+          </div>
+      
+          <!-- Filters Section -->
+          <div id="dateRangeBlock" class="mb-8 mt-8 p-4 bg-white rounded-lg shadow-sm hidden flex flex-wrap items-center gap-4 text-sm">
+            <p class="font-semibold text-gray-700">Date Range</p>
+            <input type="date" id="startDate" class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+            <span class="text-gray-500">to</span>
+            <input type="date" id="endDate" class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+      
+            <!-- Stock Selector -->
+            <select id="stockSelect" class="hidden border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+              <option value="">Select Stock</option>
+              <option value="Indomie">Indomie</option>
+              <option value="Sugar">Sugar</option>
+              <option value="Rice">Rice</option>
+            </select>
+      
+            <!-- Customer Input -->
+            <input type="text" id="customerInput" placeholder="Enter Customer Name" class="hidden border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+      
+            <button id="getLedgerBtn" class="bg-blue-600 text-white px-2 py-2 rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400">Get</button>
+          </div>
+      
+          <!-- Ledger Sections -->
+          <% ['summary', 'detailed', 'stock', 'customer'].forEach(type => { %>
+            <div id="<%= type %>Ledger" class="ledger-section hidden transition-all duration-300 mt-8 p-2">
+              <div class="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 capitalize"><%= type %> Sales Ledger</h2>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-blue-50 text-blue-700">
+                      <tr>
+                        <th class="px-4 py-3 text-left font-semibold">Sales Date</th>
+                        <th class="px-4 py-3 text-left font-semibold">Product</th>
+                        <th class="px-4 py-3 text-left font-semibold">Unit</th>
+                        <th class="px-4 py-3 text-left font-semibold">Unit Price</th>
+                        <th class="px-4 py-3 text-left font-semibold">Sales Qty</th>
+                        <th class="px-4 py-3 text-left font-semibold">Sales Amount</th>
+                        <th class="px-4 py-3 text-left font-semibold">Customer</th>
+                        <th class="px-4 py-3 text-left font-semibold">Receipt No</th>
+                        <th class="px-4 py-3 text-left font-semibold">Operator</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 text-gray-700">
+                      <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-3">10th May 2024</td>
+                        <td class="px-4 py-3">Indomie</td>
+                        <td class="px-4 py-3">TYO</td>
+                        <td class="px-4 py-3">15,000</td>
+                        <td class="px-4 py-3">10</td>
+                        <td class="px-4 py-3">₦150,000</td>
+                        <td class="px-4 py-3">Toyin Ambrose</td>
+                        <td class="px-4 py-3">092783</td>
+                        <td class="px-4 py-3">Edison</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+      
+        </main>
+      </div>
+      
+      <!-- Script -->
+      <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          let activeLedger = null;
+      
+          const dateRangeBlock = document.querySelector("#dateRangeBlock");
+          const stockSelect = document.querySelector("#stockSelect");
+          const customerInput = document.querySelector("#customerInput");
+      
+          const toggleButtons = document.querySelectorAll(".ledger-toggle");
+      
+          toggleButtons.forEach(button => {
+            button.addEventListener("click", () => {
+              const selected = button.getAttribute("data-ledger");
+              activeLedger = selected;
+      
+              document.querySelectorAll(".ledger-section").forEach(section => {
+                section.classList.add("hidden");
+              });
+      
+              // Reset filters visibility
+              stockSelect.classList.add("hidden");
+              customerInput.classList.add("hidden");
+      
+              if (selected === "stock") stockSelect.classList.remove("hidden");
+              if (selected === "customer") customerInput.classList.remove("hidden");
+      
+              dateRangeBlock.classList.remove("hidden");
+            });
+          });
+      
+          document.querySelector("#getLedgerBtn").addEventListener("click", () => {
+            if (!activeLedger) return;
+      
+            document.querySelectorAll(".ledger-section").forEach(section => {
+              section.classList.add("hidden");
+            });
+      
+            const section = document.querySelector(`#${activeLedger}Ledger`);
+            if (section) section.classList.remove("hidden");
+          });
+        });
+      </script>
+      
+  </body>
+</html>

@@ -1,0 +1,135 @@
+<!-- @format -->
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+       <%- include('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="lg:w-[220px] lg:p-4">
+          <%- include('../partials/sidebar') %>
+        </div>
+        <main class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200">
+          <h2 class="text-2xl font-semibold text-gray-800">Received Stock</h2>
+          <div class="max-w-6xl mx-auto mt-6">
+            <!-- Card -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <!-- Table Header -->
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <div>
+                  <h2 class="text-2xl font-semibold text-gray-800">
+                    Exporting Received Stock
+                  </h2>
+                </div>
+              </div>
+
+              <!-- Table -->
+              <div class="w-full overflow-x-auto lg:overflow-x-visible">
+               <table id="productsTable" class="min-w-full px-1 text-sm text-left bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <thead class="bg-white text-gray-700">
+                    <tr>
+                      <th class="p-3 border border-gray-200">Item</th>
+                      <th class="p-3 border border-gray-200">Unit</th>
+                      <th class="p-3 border border-gray-200">Qty</th>
+                      <th class="p-3 border border-gray-200">Item Rate</th>
+                      <th class="p-3 border border-gray-200">Total Amount (₦)</th>
+                      <th class="p-3 border border-gray-200">Options</th>
+                    </tr>
+                  </thead>
+                 <tbody class="text-gray-700 divide-y divide-gray-100">
+                    <tr class="border-t hover:bg-gray-50 even:bg-gray-50 transition" data-id="<%= item._id %>">
+                        <form action="/updateEachReceivedStock" method="POST" class="received-stock-form w-full contents">
+                        <!-- Item Name -->
+                        <td class="p-3 border border-gray-200">
+                            <input type="text" name="item_name" value="<%= item.item_name %>" class="border rounded px-1 py-0.5 w-full" />
+                        </td>
+
+                        <!-- Unit Code -->
+                        <td class="p-3 border border-gray-200">
+                            <input type="text" name="unitCode" value="<%= item.unitCode %>" class="border rounded px-1 py-0.5 w-full" />
+                        </td>
+
+                        <!-- Quantity -->
+                        <td class="p-3 border border-gray-200">
+                            <input type="number" name="item_qty" class="item-qty border rounded px-1 py-0.5 w-full" value="<%= item.item_qty %>" />
+                        </td>
+
+                        <!-- Rate -->
+                        <td class="p-3 border border-gray-200">
+                            <input type="number" name="item_rate" class="item-rate border rounded px-1 py-0.5 w-full" value="<%= item.item_rate %>" />
+                        </td>
+
+                        <!-- Total -->
+                        <td class="p-3 border border-gray-200">
+                            <input type="number" name="item_total" class="item-total border rounded px-1 py-0.5 w-full" value="<%= item.item_total %>" readonly />
+                        </td>
+
+                        <!-- Hidden ID -->
+                        <input type="hidden" name="receivedStockId" value="<%= item.received_id %>" />
+                        <input type="hidden" name="itemId" value="<%= item._id %>" />
+
+                        <!-- Submit -->
+                        <td class="p-3 border border-gray-200 flex space-x-2">
+                            <button type="submit" class="edit-btn bg-blue-500 text-white px-2 py-1 rounded-md">
+                            <i class="fa-solid fa-check"></i>
+                            </button>
+                        </td>
+                        </form>
+                    </tr>
+                </tbody>
+
+
+                </table>
+                <script>
+                    document.addEventListener("DOMContentLoaded", () => {
+                        const qtyInput = document.querySelector(".item-qty");
+                        const rateInput = document.querySelector(".item-rate");
+                        const totalInput = document.querySelector(".item-total");
+
+                        function calculateTotal() {
+                        const qty = parseFloat(qtyInput.value) || 0;
+                        const rate = parseFloat(rateInput.value) || 0;
+                        const total = qty * rate;
+                        totalInput.value = total.toFixed(2);
+                        }
+
+                        qtyInput.addEventListener("input", calculateTotal);
+                        rateInput.addEventListener("input", calculateTotal);
+                    });
+                </script>
+
+
+
+
+
+
+
+
+
+
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        $("#productsTable").DataTable({
+          responsive: true,
+          scrollX: true,
+          dom: "Bfrtip",
+          buttons: ["copy", "excel", "csv", "pdf", "print"],
+          language: {
+            searchPlaceholder: "Search product invoice...",
+            search: "",
+          },
+        });
+      });
+    </script>
+
+    
+  </body>
+</html>

@@ -1,0 +1,121 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('../partials/head') %>
+  <body class="bg-slate-100">
+   <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="lg:w-[220px] lg:p-4">
+          <%- include ('../partials/sidebar') %>
+        </div>
+        <main
+          class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200">
+          <!-- Page Title -->
+          <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Stock List</h1>
+          </div>
+
+          <!-- Table Container -->
+          <section class="max-w-7xl mx-auto bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">
+              <%= stock.branch_name %> stock Data
+            </h2>
+
+            <!-- Table Wrapper -->
+            <div class="w-full overflow-x-auto lg:overflow-x-visible">
+          <% if (stock.stock && stock.stock.length > 0) { %>
+            <table
+              id="stockTable"
+              class="min-w-full px-1 text-sm text-left bg-white border border-gray-200 rounded-lg shadow-sm"
+            >
+              <thead>
+                <tr class="bg-slate-100 text-gray-700 font-medium border-b">
+                  <th class="p-3 border border-gray-200">No</th>
+                  <th class="p-3 border border-gray-200">Categories</th>
+                  <th class="p-3 border border-gray-200">Stock</th>
+                  <th class="p-3 border border-gray-200">Unit Code</th>
+                  <th class="p-3 border border-gray-200">Quantity</th>
+                  <th class="p-3 border border-gray-200">Low Stock Alert</th>
+                  <th class="p-3 border border-gray-200">Suppliers Price</th>
+                  <th class="p-3 border border-gray-200">Sell Price</th>
+                  <th class="p-3 border border-gray-200">Image</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% stock.stock.forEach((stockItem, index) => { %>
+                  <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 border border-gray-200"><%= index + 1 %></td>
+                    <td class="p-3 border border-gray-200"><%= stockItem.category?.category_name || '-' %></td>
+                    <td class="p-3 border border-gray-200"><%= stockItem.product %></td>
+                    <td class="p-3 border border-gray-200">
+                      <% stockItem.variants.forEach((variant, i) => { %>
+                        <%= variant.unitCode %><%= i < stockItem.variants.length - 1 ? ', ' : '' %>
+                      <% }) %>
+                    </td>
+                    <td class="p-3 border border-gray-200">
+                      <% stockItem.variants.forEach((variant, i) => { %>
+                        <%= variant.quantity %><%= i < stockItem.variants.length - 1 ? ', ' : '' %>
+                      <% }) %>
+                    </td>
+                    <td class="p-3 border border-gray-200">
+                      <% stockItem.variants.forEach((variant, i) => { %>
+                        <%= variant.lowStockAlert %><%= i < stockItem.variants.length - 1 ? ', ' : '' %>
+                      <% }) %>
+                    </td>
+                    <td class="p-3 border border-gray-200">
+                      <% stockItem.variants.forEach((variant, i) => { %>
+                        <%= variant.supplierPrice %><%= i < stockItem.variants.length - 1 ? ', ' : '' %>
+                      <% }) %>
+                    </td>
+                    <td class="p-3 border border-gray-200">
+                      <% stockItem.variants.forEach((variant, i) => { %>
+                        <%= variant.sellPrice %><%= i < stockItem.variants.length - 1 ? ', ' : '' %>
+                      <% }) %>
+                    </td>
+                    <td class="p-3 border border-gray-200">
+                      <img
+                        src="/media/uploads/<%= stockItem.product_image %>"
+                        alt="product image"
+                        class="w-6 h-6 object-cover rounded-md"
+                        style="height: 30px;"
+                      />
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          <% } else { %>
+            <div class="p-4 text-center text-gray-500 border border-gray-200 rounded-md bg-white shadow-sm">
+              No stock records found for this branch.
+            </div>
+          <% } %>
+
+            
+            </div>
+          </section>
+
+          <%- include('../partials/footer') %>
+        </main>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+      $(document).ready(function () {
+        $('#stockTable').DataTable({
+          responsive: true,
+          scrollX: true,
+          dom: 'Bfrtip',
+          buttons: ['copy', 'excel', 'csv', 'pdf', 'print'],
+          language: {
+            searchPlaceholder: 'Search stock...',
+            search: '',
+          },
+        });
+      });
+    </script>
+  </body>
+</html>

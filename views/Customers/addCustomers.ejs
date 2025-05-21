@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include ('../partials/head') %>
+<body>
+   <div class="relative flex flex-col min-h-screen bg-slate-200">
+     <%- include ('../partials/header') %>
+
+    <div class="flex flex-row">
+        <div class="w-[220px] p-4"><%- include ('../partials/sidebar') %></div>
+        <main
+          class="cal relative top-16 p-4 overflow-auto"
+          style="width: calc(100% - 220px)">
+            <div class="flex flex-row justify-between items-center">
+                <h1 class="text-2xl font-semibold text-gray-600">Add Customers</h1>
+            </div>
+
+           <!-- Form Fields -->
+        <form action="/addCustomers" method="post" class="mt-4 space-y-4 text-sm bg-white p-6 border border-gray-200">
+            <!-- Supplier Name -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Customers <span class="text-red-500">*</span></label>
+                <input type="text" name="customer_name" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Customers">
+            </div>
+
+            <!-- Contact Person -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Mobile <span class="text-red-500">*</span></label>
+                <input type="tel" name="mobile" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Mobile">
+            </div>
+
+            <!-- Email -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Email</label>
+                <input type="email" name="email" class="col-span-2 border-b border-gray-400 py-2 w-full" placeholder="Email">
+            </div>
+
+            <!-- Billing Address -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Billing Address</label>
+                <input type="text" name="address" class="col-span-2 border-b border-gray-400 py-2 w-full" placeholder="Billing Address">
+            </div>
+
+            <!-- Credit Limit  -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Credit Limit</label>
+                <input type="text" name="credit_limit" class="col-span-2 border-b border-gray-400 py-2 w-full" placeholder="Add Limit">
+            </div>
+
+            
+
+            <!-- Submit Button -->
+            <div class="flex justify-center items-center ">
+                <button class="bg-[#3e70c9]  text-white px-3 py-1 text-sm hover:bg-blue-700">Add Customers</button>
+            </div>
+        </form>
+        </main>
+    </div>
+
+   </div>
+</body>
+</html>

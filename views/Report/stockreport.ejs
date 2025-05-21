@@ -1,0 +1,107 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="w-[220px] p-4 h-[100vh]">
+          <%- include ('../partials/sidebar') %>
+        </div>
+
+        <main
+          class="cal relative top-16 p-4 overflow-auto"
+          style="width: calc(100% - 220px)">
+          <div class="flex flex-row justify-between items-center mb-6">
+            <h1 class="text-2xl font-semibold">Stock Report</h1>
+          </div>
+
+          <!-- Filters Section -->
+          <div
+            id="creditorsFilterBlock"
+            class="mb-6 flex flex-wrap items-center gap-4 text-sm">
+            <input
+              type="text"
+              id="creditorInput"
+              placeholder="Enter Stock Name"
+              class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+
+            <p class="font-semibold text-gray-700">Date Range</p>
+            <input
+              type="date"
+              id="startDate"
+              class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+
+            <span class="text-gray-500">to</span>
+            <input
+              type="date"
+              id="endDate"
+              class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+
+            <button
+              id="getCreditorsBtn"
+              class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+              Get
+            </button>
+          </div>
+
+          <!-- Creditors Table -->
+          <div
+            id="creditorsTableSection"
+            class="hidden max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-md">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">
+              Stock Ledger
+            </h2>
+            <div class="overflow-x-auto">
+              <table
+                id="stockTable"
+                class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead
+                  class="bg-blue-50 text-blue-700">
+                  <tr>
+                    <th class="px-4 py-3 text-left">Date</th>
+                    <th class="px-4 py-3 text-left">Product</th>
+                    <th class="px-4 py-3 text-left">Unit</th>
+                    <th class="px-4 py-3 text-right">Opening Stock</th>
+                    <th class="px-4 py-3 text-right">Received</th>
+                    <th class="px-4 py-3 text-right">Issued</th>
+                    <th class="px-4 py-3 text-right">Closing Stock</th>
+                    <th class="px-4 py-3 text-left">Operator</th>
+                    <th class="px-4 py-3 text-left">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 text-gray-700">
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3">10th May 2024</td>
+                    <td class="px-4 py-3">Indomie</td>
+                    <td class="px-4 py-3">Carton</td>
+                    <td class="px-4 py-3 text-right">150</td>
+                    <td class="px-4 py-3 text-right">50</td>
+                    <td class="px-4 py-3 text-right">30</td>
+                    <td class="px-4 py-3 text-right">170</td>
+                    <td class="px-4 py-3">Edison</td>
+                    <td class="px-4 py-3">Restocked from main warehouse</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const getBtn = document.getElementById("getCreditorsBtn");
+        const tableSection = document.getElementById("creditorsTableSection");
+
+        getBtn.addEventListener("click", () => {
+          tableSection.classList.remove("hidden");
+        });
+      });
+    </script>
+  </body>
+</html>

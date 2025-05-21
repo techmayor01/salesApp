@@ -1,0 +1,75 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="w-[220px] p-4"><%- include ('../partials/sidebar') %></div>
+        <main
+          class="cal relative top-16 p-4 overflow-auto"
+          style="width: calc(100% - 220px)">
+          <div class="flex flex-row justify-between items-center">
+            <h1 class="text-2xl font-semibold">Unpaid Invoices List</h1>
+          </div>
+
+          <!-- Table -->
+          <div class="max-w-6xl mx-auto bg-white p-6">
+            <!-- Table Title -->
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">
+              Exporting Unpaid Invoices Data
+            </h2>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table
+                id="suppliersTable"
+                class="stripe hover w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr
+                    class="font-semibold text-gray-700 border border-gray-200">
+                    <th class="p-3 border border-gray-200">No</th>
+                    <th class="p-3 border border-gray-200">Invoice no</th>
+                    <th class="p-3 border border-gray-200">Customers</th>
+                    <th class="p-3 border border-gray-200">Date</th>
+                    <th class="p-3 border border-gray-200">Total Amount</th>
+                    
+                    <th class="p-3 border border-gray-200">Paid Amount</th>
+                    <th class="p-3 border border-gray-200">Remaining Amount</th>
+                    <th class="p-3 border border-gray-200">Option</th>
+                    
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-t">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                
+                  <td class=" text-center"> No data available in table</td>
+                    <td></td>
+                    <td></td>
+                  
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      $(document).ready(function () {
+        $("#suppliersTable").DataTable({
+          dom: "Bfrtip",
+          buttons: ["copy", "excel", "csv", "pdf", "print"],
+        });
+      });
+    </script>
+  </body>
+</html>

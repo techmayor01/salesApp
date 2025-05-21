@@ -1,0 +1,125 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="w-[220px] p-4"><%- include ('../partials/sidebar') %></div>
+        <main
+          class="cal relative top-16 p-4 overflow-auto"
+          style="width: calc(100% - 220px)">
+          <div class="flex flex-row justify-between items-center">
+            <h1 class="text-2xl font-semibold">Staff list</h1>
+          </div>
+
+          <!-- Table -->
+          <div class="max-w-6xl mx-auto bg-white p-6  ">
+            <!-- Table Title -->
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">
+              Exporting Staff Data
+            </h2>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table
+                id="suppliersTable"
+                class="stripe hover w-full text-left border-collapse">
+                <thead>
+                  <tr class=" text-gray-700">
+                    <th class="p-3 border border-gray-200">No</th>
+                    <th class="p-3 border border-gray-200">User Name</th>
+                    <th class="p-3 border border-gray-200">Full Name</th>
+                    <th class="p-3 border border-gray-200">User Type/Position</th>
+                    <th class="p-3 border border-gray-200">Option</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border text-sm">
+                    <td class="p-3 border border-gray-200">1</td>
+                    <td class="p-3 border border-gray-200">Admin</td>
+                    <td class="p-3 border border-gray-200">Anthony Victor</td>
+                    <td class="p-3 border border-gray-200">Super Boss</td>
+                    <td class="p-3 border border-gray-200 flex space-x-2">
+                      
+                      <button
+                        class="bg-gray-300 text-gray-700 px-3 py-1  text-sm hover:bg-gray-400">
+                        ✏ Edit
+                      </button>
+                      <button
+                        class="bg-red-500 text-white px-3 py-1  text-sm hover:bg-red-600">
+                        🗑 Delete
+                      </button>
+                    </td>
+                  </tr>
+                   <tr class="border text-sm">
+                    <td class="p-3 border border-gray-200">2</td>
+                    <td class="p-3 border border-gray-200">Accountant</td>
+                    <td class="p-3 border border-gray-200">Mercy Brels</td>
+                    <td class="p-3 border border-gray-200">General Accountant </td>
+                    <td class="p-3 border border-gray-200 flex space-x-2">
+                      
+                      <button
+                        class="bg-gray-300 text-gray-700 px-3 py-1  text-sm hover:bg-gray-400">
+                        ✏ Edit
+                      </button>
+                      <button
+                        class="bg-red-500 text-white px-3 py-1  text-sm hover:bg-red-600">
+                        🗑 Delete
+                      </button>
+                    </td>
+                  </tr>
+                   <tr class="border text-sm">
+                    <td class="p-3 border border-gray-200">3</td>
+                    <td class="p-3 border border-gray-200">Receptionist</td>
+                    <td class="p-3 border border-gray-200">Kamsy Chidogo</td>
+                    <td class="p-3 border border-gray-200">Main Receptionist </td>
+                    <td class="p-3 border border-gray-200 flex space-x-2">
+                      
+                      <button
+                        class="bg-gray-300 text-gray-700 px-3 py-1  text-sm hover:bg-gray-400">
+                        ✏ Edit
+                      </button>
+                      <button
+                        class="bg-red-500 text-white px-3 py-1  text-sm hover:bg-red-600">
+                        🗑 Delete
+                      </button>
+                    </td>
+                  </tr>
+                   <tr class="border text-sm">
+                    <td class="p-3 border border-gray-200">4</td>
+                    <td class="p-3 border border-gray-200">Sales Rep</td>
+                    <td class="p-3 border border-gray-200">Valentine Ukoh</td>
+                    <td class="p-3 border border-gray-200">Sale Rep1</td>
+                    <td class="p-3 border border-gray-200 flex space-x-2">
+                      
+                      <button
+                        class="bg-gray-300 text-gray-700 px-3 py-1  text-sm hover:bg-gray-400">
+                        ✏ Edit
+                      </button>
+                      <button
+                        class="bg-red-500 text-white px-3 py-1  text-sm hover:bg-red-600">
+                        🗑 Delete
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      $(document).ready(function () {
+        $("#suppliersTable").DataTable({
+          dom: "Bfrtip",
+          buttons: ["copy", "excel", "csv", "pdf", "print"],
+        });
+      });
+    </script>
+  </body>
+</html>

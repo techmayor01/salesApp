@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include ('../partials/head') %>
+<body>
+   <div class="relative flex flex-col min-h-screen bg-slate-200">
+     <%- include ('../partials/header') %>
+
+    <div class="flex flex-row">
+        <div class="w-[220px] p-4"><%- include ('../partials/sidebar') %></div>
+        <main
+          class="cal relative top-16 p-4 overflow-auto"
+          class="w-full lg:w-[calc(100%-220px)]">
+            <div class="flex flex-row justify-between items-center">
+                <h1 class="text-2xl font-semibold text-gray-600">Company Info</h1>
+            </div>
+
+           <!-- Form Fields -->
+        <form action="/addLoaner" method="post" class="mt-4 space-y-4 text-sm bg-white p-6 border border-gray-200">
+            <div class="flex flex-col justify-between items-start">
+                <h1 class="text-2xl font-semibold">Company Info</h1>
+                <p class="text-xs text-gray-400 py-2">use this form to edit Company Info.</p>
+            </div>
+            <!-- Company Name -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Name <span class="text-red-500">*</span></label>
+                <input type="text" name="loaner" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="My Dashboard">
+            </div>
+
+            <!-- Contact Person -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Logo <span class="text-red-500">*</span></label>
+                <div>
+                    <img src="" alt="Logo" class="w-20 h-14 rounded-full border border-gray-300 mb-2"> <br><p>
+                    Please upload ( 211 X 75 ) logo.
+                </p>
+                </div>
+            </div>
+
+
+            <!-- Change Logo -->
+            <div class="grid grid-cols-3 items-start">
+                <label class="text-gray-700 text-sm">Change Logo</label>
+                <input name="logo" type="file" class="col-span-2  py-2 w-full"  placeholder=""/>
+            </div>
+            <!-- Currency -->
+            <div class="grid grid-cols-3 items-start">
+                <label class="text-gray-700 text-sm">Currency <span class="text-red-500">*</span></label>
+                <input name="currency" type="currency" class="col-span-2 border-b border-gray-400 py-2 w-full"  placeholder="Currency"/>
+            </div>
+             <!-- Address -->
+            <div class="grid grid-cols-3 items-start">
+                <label class="text-gray-700 text-sm">Change Logo</label>
+                <input name="Address" type="text" class="col-span-2 border-b border-gray-400 py-2 w-full"  placeholder=" suite 15 Ulugos avenue Ny"/>
+            </div>
+            <!-- City -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">City <span class="text-red-500">*</span></label>
+                <input type="text" name="city" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="City">
+            </div>
+
+            <!-- Country -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Country <span class="text-red-500">*</span></label>
+                <input type="text" name="country" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Country">
+            </div>
+            <!-- Phone -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Phone <span class="text-red-500">*</span></label>
+                <input type="tel" name="phone" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Phone">
+            </div>
+            <!-- Fax -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Fax <span class="text-red-500">*</span></label>
+                <input type="tel" name="fax" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Fax">
+            </div>
+            <!-- Website -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Website <span class="text-red-500">*</span></label>
+                <input type="text" name="Website" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Website">
+            </div>
+            <!-- Submit Button -->
+            <div class="flex justify-center items-center ">
+                <button class="bg-[#3e70c9]  text-white px-3 py-1 text-sm hover:bg-blue-700">Update Settings</button>
+            </div>
+        </form>
+        </main>
+    </div>
+
+   </div>
+</body>
+</html>

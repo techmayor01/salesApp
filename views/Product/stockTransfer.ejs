@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/head') %>
+
+    <body class="bg-slate-200 text-sm">
+        <div class="relative flex flex-col min-h-screen bg-slate-200">
+            <%- include ('../partials/header') %>
+
+                <div class="flex flex-row">
+                    <div class="lg:w-[220px] lg:p-4">
+                        <%- include ('../partials/sidebar') %>
+                    </div>
+                    <form action="/stockTransfer" method="post">
+                        <main class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200"
+                            style="width: 100%;">
+                            <div class="flex flex-row items-center md:flex-row justify-between gap-4 mb-6">
+                                <h2 class="text-2xl font-bold text-gray-800">Transfer Stock</h2>
+
+                                <div class="w-50 md:w-64">
+                                    <label for="branchSelector" class="block text-sm font-medium text-gray-700 mb-1">Your Branch</label>
+                                    <select id="branchSelector" name="from_branch"
+                                      class="w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                      <option value="<%= user.branch._id %>" selected>
+                                        <%= user.branch.branch_name %>
+                                      </option>
+                                    </select>
+                                  </div>
+                                  
+                            </div>
+
+
+                            <!-- Invoice Form -->
+                            <div class="bg-white rounded-xl shadow p-6 mb-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                                    <!-- Date -->
+                                    <div>
+                                        <label class="block font-medium text-gray-700 mb-1">Date <span
+                                                class="text-red-500">*</span></label>
+                                        <input type="date" name="transfer_date"
+                                            class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-300 px-3 py-2" />
+                                    </div>
+
+                                    <!-- Branch -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Transfer To <span
+                                            class="text-red-500">*</span></label>
+                                        <% if (branches && branches.length> 0) { %>
+                                        <select name="to_branch"
+                                            class="w-full border border-gray-300 rounded-md p-2 text-sm shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option disabled selected>Select Branch</option>
+                                            <% branches.forEach(branch=> { %>
+                                                <option value="<%= branch._id %>">
+                                                    <%= branch.branch_name %>
+                                                </option>
+                                                <% }) %>
+                                        </select>
+                                        <% } else { %>
+                                            <p class="text-red-500">No branches available.</p>
+                                        <% } %>
+                                    </div>
+                                
+                                     <!-- Transaction Number -->
+                                     <div>
+                                        <label class="block font-medium text-gray-700 mb-1">Transaction
+                                            Number</label>
+                                        <input type="text" name="transaction_number" placeholder="Enter manually"
+                                            class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-300 px-3 py-2" />
+                                    </div>
+
+                                  
+
+                                    <!-- Supplier -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Note</label>
+                                       <textarea name="note" rows="4"
+                                            class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-300 px-3 py-2"></textarea>
+                                    </div>
+                                </div>
+
+
+
+                               
+                            </div>
+
+
+
+                            <!-- Table Inputs -->
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-700 mb-2">Inventory & Supplier Info</h2>
+                                <div class="overflow-x-auto">
+                                    <table id="variantTable" class="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
+                                        <thead class="bg-gray-100 text-gray-700">
+                                            <tr>
+                                                <th class="p-2 border border-gray-200">Product</th>
+                                                <th class="p-2 border border-gray-200">Unit Code</th>
+                                                <th class="p-2 border border-gray-200">Supplier Price</th>
+                                                <th class="p-2 border border-gray-200">Sell Price</th>
+                                                <th class="p-2 border border-gray-200">InStock</th>
+                                                <th class="p-2 border border-gray-200">QTY</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="variantTableBody">
+                                            <tr class="text-gray-700 bg-white">
+                                                <td class="p-2 border border-gray-200">
+                                                    <input type="text" id="searchProduct" placeholder="Search Product" class="w-full border rounded px-2 py-1" />
+                                                    <div id="searchResults" class="mt-2 bg-white border border-gray-300 rounded-md shadow-md max-h-60 overflow-y-auto hidden absolute w-full"></div>
+                                                </td>
+                                                <td class="p-2 border border-gray-200">
+                                                    <select name="unitCode[]" id="unitCode" class="w-full border rounded px-2 py-1 text-sm text-gray-700"></select>
+                                                </td>
+                                                <td class="p-2 border border-gray-200">
+                                                    <input type="number" id="supplierPrice" readonly name="supplierPrice[]" placeholder="Supplier Price" class="w-full border rounded px-2 py-1" />
+                                                </td>
+                                                <td class="p-2 border border-gray-200">
+                                                    <input type="number" id="sellPrice" readonly name="sellPrice[]" placeholder="Sell Price" class="w-full border rounded px-2 py-1" />
+                                                </td>
+                                                <td class="p-2 border border-gray-200">
+                                                    <input type="number" id="inStock" disabled name="inStock[]" placeholder="In Stock" class="w-full border rounded px-2 py-1" />
+                                                </td>
+                                                <td class="p-2 border border-gray-200">
+                                                    <input type="number" name="quantity[]" placeholder="Quantity" class="w-full border rounded px-2 py-1" />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            
+                                <!-- Hidden inputs to store selected product -->
+                                <input type="hidden" name="product" id="product" />
+                                <input type="hidden" name="productId" id="productId" />
+                            
+                                <!-- Buttons -->
+                                <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+                                    <button type="button" id="addVariantBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-md transition">
+                                        <i class="fa-solid fa-plus"></i> Add Variant
+                                    </button>
+                            
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-md transition">
+                                        <i class="fa-solid fa-paper-plane"></i> Transfer
+                                    </button>
+                                </div>
+                            
+                                <script>
+                                    let selectedProductGlobal = null;
+                            
+                                    function initializeSearch(row) {
+                                        const searchInput = row.querySelector('#searchProduct');
+                                        const searchResults = row.querySelector('#searchResults');
+                                        const branchSelector = document.getElementById('branchSelector');
+                                        const unitCodeSelect = row.querySelector('#unitCode');
+                                        const supplierPriceInput = row.querySelector('#supplierPrice');
+                                        const sellPriceInput = row.querySelector('#sellPrice');
+                                        const inStockInput = row.querySelector('#inStock');
+                            
+                                        searchInput.addEventListener('input', function () {
+                                            const query = this.value.trim();
+                                            const branchId = branchSelector ? branchSelector.value : null;
+                            
+                                            if (query.length < 3 || !branchId) {
+                                                searchResults.classList.add('hidden');
+                                                return;
+                                            }
+                            
+                                            fetch(`/searchProduct?query=${encodeURIComponent(query)}&branchId=${branchId}`)
+                                                .then(res => res.json())
+                                                .then(data => {
+                                                    const product = data.product;
+                            
+                                                    if (!product) {
+                                                        searchResults.classList.add('hidden');
+                                                        searchResults.innerHTML = '';
+                                                        return;
+                                                    }
+                            
+                                                    selectedProductGlobal = product;
+                                                    document.getElementById('product').value = product.product;
+                                                    document.getElementById('productId').value = product._id;
+                            
+                                                    searchResults.innerHTML = '';
+                                                    const item = document.createElement('div');
+                                                    item.textContent = `${product.product} - ${product.product_detail}`;
+                                                    item.className = "p-2 hover:bg-green-100 cursor-pointer";
+                            
+                                                    item.addEventListener('click', () => {
+                                                        searchInput.value = product.product;
+                                                        searchResults.classList.add('hidden');
+                            
+                                                        unitCodeSelect.innerHTML = '';
+                                                        product.variants.forEach(variant => {
+                                                            const option = document.createElement('option');
+                                                            option.value = variant.unitCode;
+                                                            option.textContent = `${variant.unitCode} - In stock: ${variant.quantity}`;
+                                                            unitCodeSelect.appendChild(option);
+                                                        });
+                            
+                                                        unitCodeSelect.addEventListener('change', function () {
+                                                            const selectedUnitCode = this.value;
+                                                            const selectedVariant = product.variants.find(v => v.unitCode === selectedUnitCode);
+                                                            if (selectedVariant) {
+                                                                supplierPriceInput.value = selectedVariant.supplierPrice;
+                                                                sellPriceInput.value = selectedVariant.sellPrice;
+                                                                inStockInput.value = selectedVariant.quantity;
+                                                                row.dataset.variantId = selectedVariant._id;
+                                                            }
+                                                        });
+                            
+                                                        if (product.variants.length > 0) {
+                                                            unitCodeSelect.dispatchEvent(new Event('change'));
+                                                        }
+                                                    });
+                            
+                                                    searchResults.appendChild(item);
+                                                    searchResults.classList.remove('hidden');
+                                                })
+                                                .catch(err => {
+                                                    console.error('Search failed', err);
+                                                });
+                                        });
+                                    }
+                            
+                                    function populateVariantDropdown(row, product) {
+                                        const unitCodeSelect = row.querySelector('.unitCode');
+                                        const supplierPriceInput = row.querySelector('.supplierPrice');
+                                        const sellPriceInput = row.querySelector('.sellPrice');
+                                        const inStockInput = row.querySelector('.inStock');
+                            
+                                        unitCodeSelect.innerHTML = '';
+                                        product.variants.forEach(variant => {
+                                            const option = document.createElement('option');
+                                            option.value = variant.unitCode;
+                                            option.textContent = `${variant.unitCode} - In stock: ${variant.quantity}`;
+                                            unitCodeSelect.appendChild(option);
+                                        });
+                            
+                                        unitCodeSelect.addEventListener('change', function () {
+                                            const selectedUnitCode = this.value;
+                                            const selectedVariant = product.variants.find(v => v.unitCode === selectedUnitCode);
+                                            if (selectedVariant) {
+                                                supplierPriceInput.value = selectedVariant.supplierPrice;
+                                                sellPriceInput.value = selectedVariant.sellPrice;
+                                                inStockInput.value = selectedVariant.quantity;
+                                                row.dataset.variantId = selectedVariant._id;
+                                            }
+                                        });
+                            
+                                        if (product.variants.length > 0) {
+                                            unitCodeSelect.dispatchEvent(new Event('change'));
+                                        }
+                                    }
+                            
+                                    document.getElementById('addVariantBtn').addEventListener('click', function () {
+                                        if (!selectedProductGlobal) {
+                                            alert("Please select a product first.");
+                                            return;
+                                        }
+                            
+                                        const tableBody = document.getElementById('variantTableBody');
+                                        const newRow = document.createElement('tr');
+                                        newRow.className = 'text-gray-700 bg-white';
+                                        newRow.innerHTML = `
+                                            <td class="p-2 border border-gray-200">
+                                                <input type="text" class="w-full border rounded px-2 py-1 bg-gray-100" value="${selectedProductGlobal.product}" disabled />
+                                            </td>
+                                            <td class="p-2 border border-gray-200">
+                                                <select name="unitCode[]" class="unitCode w-full border rounded px-2 py-1 text-sm text-gray-700"></select>
+                                            </td>
+                                            <td class="p-2 border border-gray-200">
+                                                <input type="number" readonly name="supplierPrice[]" class="supplierPrice w-full border rounded px-2 py-1" placeholder="Supplier Price" />
+                                            </td>
+                                            <td class="p-2 border border-gray-200">
+                                                <input type="number" readonly name="sellPrice[]" class="sellPrice w-full border rounded px-2 py-1" placeholder="Sell Price" />
+                                            </td>
+                                            <td class="p-2 border border-gray-200">
+                                                <input type="number" disabled name="inStock[]" class="inStock w-full border rounded px-2 py-1" placeholder="In Stock" />
+                                            </td>
+                                            <td class="p-2 border border-gray-200 flex items-center gap-2">
+                                                <input type="number" name="quantity[]" class="w-full border rounded px-2 py-1" placeholder="Quantity" />
+                                                <button type="button" class="removeVariantBtn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded">❌</button>
+                                            </td>
+                                        `;
+                            
+                                        tableBody.appendChild(newRow);
+                                        populateVariantDropdown(newRow, selectedProductGlobal);
+                            
+                                        newRow.querySelector('.removeVariantBtn').addEventListener('click', () => {
+                                            newRow.remove();
+                                        });
+                                    });
+                            
+                                    // Initialize search for the first row
+                                    initializeSearch(document.querySelector('#variantTableBody tr'));
+                                </script>
+                            </div>
+                            
+                            
+                    
+        
+
+                            <!-- Product List (Suggestions) -->
+                            <ul id="productList" class="absolute bg-white border rounded-md mt-1 w-full hidden">
+                                <!-- Matching products will be displayed here -->
+                            </ul>
+
+                            <!-- Product Details Section -->
+                            <div id="productDetails" class="mt-4">
+                                <!-- Product details will be populated here -->
+                            </div>
+
+                          
+
+                            <style>
+                                #productList {
+                                    position: absolute;
+                                    max-height: 150px;
+                                    overflow-y: auto;
+                                    width: 100%;
+                                    z-index: 1000;
+                                }
+
+                                #productList li:hover {
+                                    background-color: #f0f0f0;
+                                }
+                            </style>
+
+                    
+
+                            
+                            <%- include ('../partials/footer') %>
+                        </main>
+                    </form>
+                </div>
+        </div>
+
+
+
+    </body>
+
+</html>

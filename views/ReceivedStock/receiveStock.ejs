@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('../partials/head') %>
+  <body class="bg-slate-200 text-sm">
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="lg:w-[220px] lg:p-4">
+          <%- include ('../partials/sidebar') %>
+        </div>
+        <form action="/addReceiveStock" method="post">
+        <main
+          class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200" style="width: 100%;">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4" >Add Receive Stock</h2>
+
+          <!-- Invoice Form -->
+          <div class="bg-white rounded-xl shadow p-6 mb-6" >
+              <!-- Left Column -->
+              <div class="grid grid-cols-2 gap-6">
+                <!-- Supplier -->
+              <div>
+                <label class="block font-medium text-gray-700 mb-1">Select Supplier <span class="text-red-500">*</span></label>
+                
+                <% if (suppliers && suppliers.length > 0) { %>
+                  <select name="supplier" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-300 px-3 py-2">
+                    <option value="">Select Supplier</option>
+                    <% suppliers.forEach(supplier => { %>
+                      <option value="<%= supplier._id %>"><%= supplier.supplier %></option>
+                    <% }) %>
+                  </select>
+                <% } else { %>
+                  <p class="text-red-500">No suppliers available.</p>
+                <% } %>
+              </div>
+
+              <!-- Branch -->
+              <div>
+                <label class="block font-medium text-gray-700 mb-1">Branch <span class="text-red-500">*</span></label>
+                <%= ownerBranch && ownerBranch.branch && ownerBranch.branch.branch_name 
+                      ? ownerBranch.branch.branch_name 
+                      : 'N/A' %>
+              </div>
+
+              <div>
+                <label class="block font-medium text-gray-700 mb-1">
+                  Invoice Number<span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="invoice_number"
+                  id="invoice_number"
+                  class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-300 px-3 py-2" >
+              </div>
+
+
+              <!-- Date -->
+              <div>
+                <label class="block font-medium text-gray-700 mb-1">
+                  Date <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="payment_date"
+                  id="payment_date"
+                  style="border: none; outline: noney;"
+                />
+              </div>
+              <script>
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('payment_date').value = today;
+              </script>
+
+              </div>
+           
+          </div>
+            
+            <!-- Invoice Table -->
+           <div class="bg-white rounded-xl shadow p-6 overflow-x-auto">
+              <table class="min-w-full border text-sm text-gray-700">
+                <thead class="bg-gray-50 font-medium">
+                  <tr>
+                    <th class="p-3 border">Item Info <span class="text-red-500">*</span></th>
+                    <th class="p-3 border">Unit <span class="text-red-500">*</span></th>
+                    <th class="p-3 border">Qty <span class="text-red-500">*</span></th>
+                    <th class="p-3 border">Rate <span class="text-red-500">*</span></th>
+                    <th class="p-3 border">Total</th>
+                    <th class="p-3 border text-center">Action</th>
+                  </tr>
+                </thead>
+
+                <tbody id="itemTableBody">
+                  <!-- Initial row -->
+                  <tr class="hover:bg-gray-50 item-row">
+                    <td class="p-2 border relative">
+                      <input type="text" placeholder="Item Name" name="item_name" class="w-full border rounded px-2 py-1 item-name" autocomplete="off" />
+                      <input type="hidden" name="product_id" class="product-id-hidden" />
+                      <div class="autocomplete-suggestions absolute z-10 bg-white border mt-1 w-full shadow rounded hidden"></div>
+                    </td>
+                    <td class="p-2 border">
+                      <select name="unitCode" class="w-full border rounded px-2 py-1 text-sm text-gray-700">
+                        <option value="ctns">Ctns</option>
+                        <option value="schts">Schts</option>
+                        <option value="rolls">Rolls</option>
+                        <option value="pkts">Pkts</option>
+                        <option value="pcs">Pcs</option>
+                        <option value="cs">Cs</option>
+                        <option value="dz">Dz</option>
+                      </select>
+                    </td>
+                    <td class="p-2 border">
+                      <input type="number" name="item_qty" class="w-full border rounded px-2 py-1 item-qty" />
+                    </td>
+                    <td class="p-2 border">
+                      <input type="number" name="item_rate" class="w-full border rounded px-2 py-1 item-rate" />
+                    </td>
+                    <td class="p-2 border">
+                      <input type="text" value="" class="w-full border bg-gray-100 rounded px-2 py-1 item-total" readonly />
+                    </td>
+                    <td class="p-2 border text-center">
+                      <button type="button" class="bg-red-500 hover:bg-red-600 text-white rounded px-3 py-1 delete-row">Delete</button>
+                    </td>
+                  </tr>
+                </tbody>
+
+               <!-- Grand Total -->
+                <tr>
+                  <td colspan="4" class="text-right font-semibold p-2">Grand Total:</td>
+                  <td class="p-2">
+                    <input type="text" id="grandTotal" class="w-full border bg-gray-100 rounded px-2 py-1 font-semibold text-right" readonly />
+                  </td>
+                  <td></td>
+                </tr>
+
+                <!-- Footer -->
+                <tfoot>
+                  <tr>
+                    <td colspan="4" class="p-2 text-right font-medium">Paid Amount:</td>
+                    <td class="p-2">
+                      <input type="number" name="paid_amount" value="0.00" class="w-full border rounded px-2 py-1" />
+                    </td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td colspan="6" class="p-2 text-center">
+                      <button type="submit" name="payment_status" value="paid_half" class="bg-green-500 hover:bg-green-600 text-white rounded px-4 py-1">Submit</button>
+                    </td>
+                  </tr>
+                </tfoot>
+                </table>
+
+                <!-- JS Script -->
+                <script>
+                  document.addEventListener("DOMContentLoaded", function () {
+                    const tableBody = document.getElementById("itemTableBody");
+                    const grandTotalInput = document.getElementById("grandTotal");
+                    const paidAmountInput = document.querySelector("input[name='paid_amount']");
+
+                    function calculateRowTotal(row) {
+                      const qty = parseFloat(row.querySelector(".item-qty").value) || 0;
+                      const rate = parseFloat(row.querySelector(".item-rate").value) || 0;
+                      const total = qty * rate;
+                      row.querySelector(".item-total").value = total.toFixed(2);
+                      calculateGrandTotal();
+                    }
+
+                    function calculateGrandTotal() {
+                      let grandTotal = 0;
+                      document.querySelectorAll(".item-total").forEach(input => {
+                        grandTotal += parseFloat(input.value) || 0;
+                      });
+                      grandTotalInput.value = grandTotal.toFixed(2);
+                      // Update paid amount to match grand total automatically
+                      paidAmountInput.value = grandTotal.toFixed(2);
+                    }
+
+                    function attachEventListeners(row) {
+                      const qtyInput = row.querySelector(".item-qty");
+                      const rateInput = row.querySelector(".item-rate");
+                      const nameInput = row.querySelector(".item-name");
+                      const hiddenIdInput = row.querySelector(".product-id-hidden");
+                      const suggestionBox = row.querySelector(".autocomplete-suggestions");
+
+                      qtyInput.addEventListener("input", () => {
+                        calculateRowTotal(row);
+                        maybeAddNewRow();
+                      });
+
+                      rateInput.addEventListener("input", () => {
+                        calculateRowTotal(row);
+                        maybeAddNewRow();
+                      });
+
+                      row.querySelector(".delete-row").addEventListener("click", () => {
+                        if (tableBody.rows.length > 1) {
+                          row.remove();
+                          calculateGrandTotal();
+                        }
+                      });
+
+                      nameInput.addEventListener("input", function () {
+                        const query = this.value;
+                        if (query.length < 2) {
+                          suggestionBox.innerHTML = '';
+                          suggestionBox.classList.add('hidden');
+                          return;
+                        }
+
+                        fetch(`/search-stock?q=${encodeURIComponent(query)}`)
+                          .then(res => res.json())
+                          .then(data => {
+                            suggestionBox.innerHTML = '';
+                            if (data.length === 0) {
+                              suggestionBox.classList.add('hidden');
+                              return;
+                            }
+
+                            data.forEach(item => {
+                              const div = document.createElement("div");
+                              div.textContent = item.name;
+                              div.classList.add("p-2", "hover:bg-blue-100", "cursor-pointer", "text-sm");
+                              div.dataset.id = item.id;
+                              div.dataset.supplierprice = item.supplierPrice || "";
+
+                              // Use mousedown for faster selection on soft click
+                              div.addEventListener("mousedown", function () {
+                                nameInput.value = item.name;
+                                hiddenIdInput.value = item.id;
+                                if (item.supplierPrice) {
+                                  rateInput.value = item.supplierPrice;
+                                  calculateRowTotal(row);
+                                  maybeAddNewRow();
+                                }
+                                suggestionBox.innerHTML = '';
+                                suggestionBox.classList.add('hidden');
+                              });
+
+                              suggestionBox.appendChild(div);
+                            });
+
+                            suggestionBox.classList.remove('hidden');
+                          })
+                          .catch(err => console.error("Autocomplete error:", err));
+                      });
+
+                      nameInput.addEventListener("blur", () => {
+                        setTimeout(() => suggestionBox.classList.add("hidden"), 100);
+                      });
+                    }
+
+                    function maybeAddNewRow() {
+                      const lastRow = tableBody.lastElementChild;
+                      const itemName = lastRow.querySelector(".item-name").value.trim();
+                      const qty = lastRow.querySelector(".item-qty").value;
+                      const rate = lastRow.querySelector(".item-rate").value;
+
+                      if (itemName && qty && rate) {
+                        const newRow = lastRow.cloneNode(true);
+                        newRow.querySelectorAll("input, select").forEach(input => {
+                          if (input.type === "text" || input.type === "number") input.value = "";
+                          if (input.classList.contains("product-id-hidden")) input.value = "";
+                        });
+                        newRow.querySelector(".autocomplete-suggestions").innerHTML = '';
+                        newRow.querySelector(".autocomplete-suggestions").classList.add("hidden");
+
+                        tableBody.appendChild(newRow);
+                        attachEventListeners(newRow);
+                      }
+                    }
+
+                    const initialRow = tableBody.querySelector(".item-row");
+                    attachEventListeners(initialRow);
+                  });
+                </script>
+
+
+            </div>
+
+          <%- include ('../partials/footer') %>
+        </main>
+        </form>
+      </div>
+    </div>
+
+
+    
+  </body>
+</html>

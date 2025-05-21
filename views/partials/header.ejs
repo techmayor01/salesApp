@@ -1,0 +1,116 @@
+<header class="max-w-8xl mx-auto text-gray-400 border-b border-gray-200 fixed top-0 left-0 right-0 z-10 bg-white">
+  <nav class="p-3 px-6 flex items-center justify-between">
+    <!-- Left Section -->
+    <div class="flex items-center space-x-4">
+      <span class="text-green-700 font-bold text-lg">MY <span class="text-gray-700">Dashboard</span></span>
+
+      <!-- Hamburger Menu (small screens only) -->
+      <i class="fa-solid fa-bars cursor-pointer block lg:hidden" id="sidebarToggle"></i>
+
+      <!-- Search (Hidden on small screens) -->
+      <div class="relative items-center hidden lg:flex">
+        <input id="searchBox" type="text" placeholder="Search for invoice..."
+          class="w-28 sm:w-52 transition-all duration-300 ease-in-out focus:w-80 border px-3 py-1 outline-none" />
+        <span class="absolute right-2 text-gray-500 cursor-pointer">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </span>
+      </div>
+    </div>
+
+    <!-- Right Section -->
+    <div class="flex items-center space-x-4">
+      <!-- Language (Hidden on small screens) -->
+      <div class="relative hidden lg:block">
+        <select name="branch" id="branchSelect" class="border border-gray-300 rounded px-3 py-1 text-sm">
+          <option value="" disabled selected>Select Branch</option>
+      
+          <% if (user.role.toLowerCase() === 'owner' && branches.length > 0) { %>
+            <% branches.forEach(branch => { %>
+              <option value="<%= branch._id %>"><%= branch.branch_name %></option>
+            <% }); %>
+      
+          <% } else if (user.role.toLowerCase() === 'staff' && user.branch && user.branch.branch_name) { %>
+            <option value="<%= ownerBranch.branch._id %>" selected>
+              <%= user.branch.branch_name %>
+            </option>
+      
+          <% } else { %>
+            <option value="">No branches available</option>
+          <% } %>
+        </select>
+      </div>
+      
+
+      <!-- Profile -->
+      <div class="relative">
+        <button class="text-gray-600 flex items-center">
+          <span id="profileBtn" class="text-gray-400 text-2xl">
+            <i class="fa-solid fa-user-tie"></i>
+          </span>
+        </button>
+        <div id="profileDropdown"
+          class="absolute right-0 mt-2 w-40 bg-white border shadow-lg opacity-0 invisible transition-opacity duration-300 z-50">
+          <ul class="p-2">
+            <li class="p-2 hover:bg-gray-200 cursor-pointer">Profile</li>
+            <li class="p-2 hover:bg-gray-200 cursor-pointer">Help</li>
+            <li class="p-2 hover:bg-gray-200 cursor-pointer">Sign out</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- More Options (Only on small screens) -->
+      <div class="relative block lg:hidden">
+        <button id="moreBtn" class="text-xl text-gray-600">
+          <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+        <div id="moreDropdown"
+          class="absolute right-0 mt-2 w-64 bg-white border shadow-lg opacity-0 invisible transition-opacity duration-300 z-50 p-4 space-y-4">
+          <!-- Search (mobile) -->
+          <div class="relative">
+            <input type="text" placeholder="Search for invoice..."
+              class="w-full border px-3 py-1 outline-none" />
+            <span class="absolute right-3 top-2 text-gray-500 cursor-pointer">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+          </div>
+          <!-- Languages (mobile) -->
+          <div>
+            <label class="block text-sm mb-1 text-gray-700">Languages</label>
+            <ul>
+              <li class="p-2 hover:bg-gray-200 cursor-pointer">English</li>
+              <li class="p-2 hover:bg-gray-200 cursor-pointer">French</li>
+              <li class="p-2 hover:bg-gray-200 cursor-pointer">Spanish</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- JavaScript for Interactions -->
+  <script>
+    document.getElementById('sidebarToggle').addEventListener('click', function () {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('-translate-x-full');
+      sidebar.classList.toggle('translate-x-0');
+    });
+
+    document.getElementById('languageBtn').addEventListener('click', function () {
+      const dropdown = document.getElementById('languageDropdown');
+      dropdown.classList.toggle('opacity-0');
+      dropdown.classList.toggle('invisible');
+    });
+
+    document.getElementById('profileBtn').addEventListener('click', function () {
+      const dropdown = document.getElementById('profileDropdown');
+      dropdown.classList.toggle('opacity-0');
+      dropdown.classList.toggle('invisible');
+    });
+
+    document.getElementById('moreBtn').addEventListener('click', function () {
+      const dropdown = document.getElementById('moreDropdown');
+      dropdown.classList.toggle('opacity-0');
+      dropdown.classList.toggle('invisible');
+    });
+  </script>
+</header>

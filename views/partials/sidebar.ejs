@@ -1,0 +1,298 @@
+<!-- @format -->
+
+<aside
+id="sidebar"
+  class="w-[220px] fixed top-16 left-0 h-full pt-6 bg-gradient-to-b from-white to-gray-100 border-r border-gray overflow-y-scroll sidebar-scrollbar   transition-transform duration-300 transform -translate-x-full lg:translate-x-0 z-30 lg:z-0">
+  
+  <ul class="flex flex-col px-2 space-y-1 text-sm font-medium text-gray-700">
+    <li>
+      <a href="/dashboard" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+        <i class="fas fa-home text-blue-600"></i>
+        <span>Dashboard</span>
+      </a>
+    </li>
+ <!-- Suppliers Menu Item -->
+    <li class="">
+      <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+        <div class="flex items-center space-x-3 text-gray-700">
+          <i class="fas fa-box text-blue-600"></i>
+          <span>Suppliers</span>
+        </div>
+        <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+      </button>
+      <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+        <% if (user.role === 'owner' || user.role === 'admin') { %>
+          <li><a href="/addSupplier" class="block py-1 hover:text-blue-600">Add Supplier</a></li>
+        <% } %>
+        <li><a href="/manageSuppliers" class="block py-1 hover:text-blue-600">Manage Suppliers</a></li>
+      </ul>
+    </li>
+
+
+      <!-- Categories -->
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fas fa-th text-blue-600"></i>
+            <span>Categories</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <% if (user.role === 'owner') { %>
+          <li><a href="/addCategories" class="block py-1 hover:text-blue-600">Add Categories</a></li>
+          <% } %>
+          <li><a href="/manageCategories" class="block py-1 hover:text-blue-600"> Manage Categories</a></li>
+        </ul>
+      </li>
+
+      <!-- Warehouse -->
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fas fa-warehouse text-blue-600"></i>
+            <span>Branch</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <% if (user.role === 'owner') { %>
+          <li><a href="/addBranch" class="block py-1 hover:text-blue-600">Add Branch</a></li>
+          <% } %>
+          <li><a href="/manageBranch" class="block py-1 hover:text-blue-600">Manage Branch</a></li>
+        </ul>
+      </li>
+
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-receipt text-blue-600"></i>
+            <span>Suppliers Invoice</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <% if (user.role === 'owner' || user.role === 'admin') { %>
+          <li><a href="/addSupplierInvoice" class="block py-1 hover:text-blue-600">Add Invoice</a></li>
+          <li><a href="/SuppliersInvoice" class="block py-1 hover:text-blue-600">Invoice List</a></li>
+          <% } %>
+        </ul>
+      </li>
+
+       <!--Received stock -->
+       <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-cart-arrow-down text-blue-600"></i>
+            <span>Recieved Stock</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/addReceiveStock" class="block py-1 hover:text-blue-600">Add Receive Stock</a></li>
+          <li><a href="/received-stock" class="block py-1 hover:text-blue-600">Recieved Stock</a></li>
+          <li><a href="/productLogs" class="block py-1 hover:text-blue-600">Recieved Stock Logs</a></li>
+     
+        </ul>
+      </li>
+   <!-- Product -->
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-cart-flatbed-suitcase text-blue-600"></i>
+            <span>Stock</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/addProduct" class="block py-1 hover:text-blue-600">Add Stock</a></li>
+          <li><a href="/manageProduct" class="block py-1 hover:text-blue-600">Manage Stock</a></li>
+          <li><a href="/stockTransfer" class="block py-1 hover:text-blue-600">Stock Transfer</a></li>
+          <li><a href="/adjustStock" class="block py-1 hover:text-blue-600">Adjust Stock</a></li>
+        </ul>
+      </li>
+    <!--Expired Product -->
+      <li class=" ">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-calendar-xmark text-blue-600"></i>
+            <span>Expired Product</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/expiredProducts" class="block py-1 hover:text-blue-600">Expired Product</a></li>
+     
+        </ul>
+      </li>
+    <!--Dead stock Product -->
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-trash-arrow-up text-blue-600"></i>
+            <span>Dead Stock Product</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/DeadStockProducts" class="block py-1 hover:text-blue-600">Dead Stock Product</a></li>
+     
+        </ul>
+      </li>
+
+   
+      <!-- Customer -->
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-user text-blue-600"></i>
+            <span>Customer</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/addCustomers" class="block py-1 hover:text-blue-600">Add Customer</a></li>
+          <li><a href="/manageCustomers" class="block py-1 hover:text-blue-600">Manage Customer</a></li>
+          <li><a href="/creditCustomers" class="block py-1 hover:text-blue-600">Credit Customer</a></li>
+          <li><a href="/paidCustomers" class="block py-1 hover:text-blue-600">Cash Customer</a></li>
+        </ul>
+      </li>
+       <!-- Transaction -->
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-rotate text-blue-600"></i>
+            <span>Transaction</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/cashReceivable" class="block py-1 hover:text-blue-600">Cash Receivable</a></li>
+          <li><a href="/transactionHistory" class="block py-1 hover:text-blue-600">Transaction History</a></li>
+          
+        </ul>
+      </li>
+      <!-- Invoice -->
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-file-invoice-dollar text-blue-600"></i>
+            <span>Invoice</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/addInvoice" class="block py-1 hover:text-blue-600">Add Invoice</a></li>
+          <li><a href="/manageInvoice" class="block py-1 hover:text-blue-600">Manage Invoice</a></li>
+          <li><a href="/Invoice/paidInvoice" class="block py-1 hover:text-blue-600">Paid Invoice</a></li>
+          <li><a href="/Invoice/unpaidInvoice" class="block py-1 hover:text-blue-600">Unpaid Invoice</a></li>
+          
+        </ul>
+      </li>
+      <!-- Expenses -->
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-file-invoice-dollar text-blue-600"></i>
+            <span>Expenses</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/Expenses/addExpenses" class="block py-1 hover:text-blue-600">Add Expenses</a></li>
+          <li><a href="/Expenses/manageExpenses" class="block py-1 hover:text-blue-600">Manage Expenses</a></li>
+          <li><a href="/Expenses/addExpensesInvoice" class="block py-1 hover:text-blue-600">Add Expenses Invoice</a></li>
+          <li><a href="/Expenses/manageExpensesInvoice" class="block py-1 hover:text-blue-600">Manage Expenses Invoice</a></li>
+          <li><a href="/Expenses/paidExpenses" class="block py-1 hover:text-blue-600">Paid Expenses </a></li>
+          <li><a href="/Expenses/unpaidExpenses" class="block py-1 hover:text-blue-600">Unpaid Expenses </a></li>
+        </ul>
+      </li>
+         <!-- Loan -->
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-dollar-sign text-blue-600"></i>
+            <span>Loan</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/addLoaner" class="block py-1 hover:text-blue-600">Add Loaner</a></li>
+          <li><a href="/manageloaner" class="block py-1 hover:text-blue-600">Manage Loaners</a></li>
+          <li><a href="/addloan" class="block py-1 hover:text-blue-600">Add Loan</a></li>
+          <li><a href="/manageloan" class="block py-1 hover:text-blue-600">Manage Loan</a></li>
+
+        </ul>
+      </li>
+          <!--Staff -->
+      <li class=" text-gray-500 ">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fa-solid fa-user text-blue-600"></i>
+            <span>Staff</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/addStaffs" class="block py-1 hover:text-blue-600">Add Staff</a></li>
+          <li><a href="/manageStaffs" class="block py-1 hover:text-blue-600">Manage Staff</a></li>
+
+
+        </ul>
+      </li>
+
+           <!--Report -->
+       <li>
+      <button onclick="toggleDropdown(this)"
+        class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+        <div class="flex items-center space-x-3 text-gray-700">
+          <i class="fa-solid fa-chart-simple text-blue-600"></i>
+          <span>Report</span>
+        </div>
+        <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+      </button>
+      <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+        <li><a href="/Report/profit_loss" class="block py-1 hover:text-blue-600"> Profit/Loss Ledger</a></li>
+        <li><a href="/Report/salesLedger" class="block py-1 hover:text-blue-600">Sales Report</a></li>
+        <li><a href="/purchase-report" class="block py-1 hover:text-blue-600">Purchase Report</a></li>
+        <li><a href="/stock-report" class="block py-1 hover:text-blue-600">Stock Report</a></li>
+        <li><a href="/creditors-report" class="block py-1 hover:text-blue-600">Creditors Report</a></li>
+        <li><a href="/debitor-report" class="block py-1 hover:text-blue-600">Debitors Report</a></li>
+        <li><a href="/stocktransfer-report" class="block py-1 hover:text-blue-600">Stocktransfer Report</a></li>
+        <li><a href="/Report/expenseLedger" class="block py-1 hover:text-blue-600">Expense Ledger</a></li>
+      </ul>
+    </li>
+
+           <!--Settings -->
+      <li class=" text-gray-500 ">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3 text-gray-700">
+            <i class="fa-solid fa-gear text-blue-600"></i>
+            <span>Settings</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/Settings/companyInfo" class="block py-1 hover:text-blue-600">Company Info</a></li>
+          <li><a href="/Settings/signOut" class="block py-1 hover:text-blue-600">Sign Out</a></li>
+        
+
+
+        </ul>
+      </li>
+
+    
+  </ul>
+</aside>
+<script>
+    function toggleDropdown(button) {
+      const dropdown = button.nextElementSibling;
+      const icon = button.querySelector("i.fas.fa-chevron-right");
+
+      // Toggle dropdown visibility
+      dropdown.classList.toggle("hidden");
+
+      // Rotate the icon for dropdown state
+      icon.classList.toggle("rotate-90");
+    }
+  </script>

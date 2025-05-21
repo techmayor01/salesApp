@@ -1,0 +1,103 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="lg:w-[220px] lg:p-4">
+          <%- include ('../partials/sidebar') %>
+        </div>
+        <main
+          class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200">
+          <div class="flex flex-row justify-between items-center">
+            <h1 class="text-2xl font-semibold">Expired Products</h1>
+          </div>
+
+          <!-- Table -->
+          <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow-md mt-6">
+            <!-- Table Title -->
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">
+              Exporting Expired product Data
+            </h2>
+
+            <!-- Table -->
+            <div class="w-full overflow-x-auto lg:overflow-x-visible">
+              <table
+              id="expiredproductsTable"
+              class="min-w-full px-1 text-sm text-left bg-white border border-gray-200 rounded-lg shadow-sm">
+              <thead>
+                <tr class="font-semibold text-gray-700 border border-gray-200">
+                  <th class="p-3 border border-gray-200">No</th>
+                  <th class="p-3 border border-gray-200">Products</th>
+                  <th class="p-3 border border-gray-200">Unit Code</th>
+                  <th class="p-3 border border-gray-200">Mfg.Date</th>
+                  <th class="p-3 border border-gray-200">Exp.Date</th>
+                  <th class="p-3 border border-gray-200">Quantity</th>
+                  <th class="p-3 border border-gray-200">Image</th>
+                  <th class="p-3 border border-gray-200">Option</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (expiredProducts.length > 0) { %>
+                  <% expiredProducts.forEach((product, index) => { %>
+                    <tr class="border-t hover:bg-gray-50">
+                      <td class="p-3 border border-gray-200"><%= index + 1 %></td>
+                      <td class="p-3 border border-gray-200"><%= product.product %></td>
+                      <td class="p-3 border border-gray-200">
+                        <% product.variants.forEach((variant, i) => { %>
+                          <%= variant.unitCode %><%= i < product.variants.length - 1 ? ', ' : '' %>
+                        <% }) %>
+                      </td>
+                      <td class="p-3 border border-gray-200"><%= product.mfgDate.toDateString() %></td>
+                      <td class="p-3 border border-gray-200 text-red-600 font-medium"><%= product.expDate.toDateString() %></td>
+                      <td class="p-3 border border-gray-200">
+                        <% product.variants.forEach((variant, i) => { %>
+                          <%= variant.quantity %><%= i < product.variants.length - 1 ? ', ' : '' %>
+                        <% }) %>
+                      </td>
+                      <td class="p-3 border border-gray-200">
+                        <% if (product.product_image) { %>
+                          <img src="/media/uploads/<%= product.product_image %>" alt="Image" class="w-6 h-6 rounded object-cover" style="height: 30px;" />
+                        <% } else { %>
+                          <span class="text-gray-400">No Image</span>
+                        <% } %>
+                      </td>
+                      <td class="p-3 border border-gray-200">
+                        <button class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
+                          🗑 Remove
+                        </button>
+                      </td>
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="8" class="text-center py-4 text-gray-500">No expired products found</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+            
+            <!-- Include the script to initialize DataTables only if products are present -->
+            <script>
+              $(document).ready(function() {
+                // Only initialize DataTable if there are expired products
+                if (<%= expiredProducts.length %> > 0) {
+                  $('#expiredproductsTable').DataTable();
+                }
+              });
+            </script>
+            
+            </div>
+          </div>
+          
+          <%- include('../partials/footer') %>
+        </main>
+      </div>
+    </div>
+
+  </body>
+</html>

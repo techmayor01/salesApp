@@ -1,0 +1,90 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="w-[220px] p-4"><%- include ('../partials/sidebar') %></div>
+        <main
+          class="cal relative top-16 p-4 overflow-auto"
+          style="width: calc(100% - 220px)">
+          <div class="flex flex-row justify-between items-center">
+            <h1 class="text-2xl font-semibold">Loans List</h1>
+          </div>
+
+          <!-- Table -->
+          <div class="max-w-6xl mx-auto bg-white p-6">
+            <!-- Table Title -->
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">
+             Exporting Loans Data
+            </h2>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table
+                id="suppliersTable"
+                class="stripe hover w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr
+                    class="font-semibold text-gray-700 border border-gray-200">
+                    <th class="p-3 border border-gray-200">No</th>
+                    <th class="p-3 border border-gray-200">Loan</th>
+                    <th class="p-3 border border-gray-200">Mobile</th>
+                    <th class="p-3 border border-gray-200">Date Contrac Start</th>
+                    <th class="p-3 border border-gray-200">Loan Amount</th>
+                    <th class="p-3 border border-gray-200">Amount Returned</th>
+                    <th class="p-3 border border-gray-200">Option</th>
+
+                    <th class="p-3 border border-gray-200">Status</th>
+                    
+                    
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (loans.length === 0) { %>
+                    <tr class="border-t">
+                      <td colspan="8" class="text-center py-4 text-gray-500">No data available in table</td>
+                    </tr>
+                  <% } else { %>
+                    <% loans.forEach((loan, index) => { %>
+                      <tr class="border-t hover:bg-gray-50">
+                        <td class="p-3 border border-gray-200"><%= index + 1 %></td>
+                        <td class="p-3 border border-gray-200"><%= loan.loanerName %></td>
+                        <td class="p-3 border border-gray-200"><%= loan.mobile %></td>
+                        <td class="p-3 border border-gray-200"><%= loan.contractStart.toISOString().split('T')[0] %></td>
+                        <td class="p-3 border border-gray-200">₦<%= loan.loanAmount %></td>
+                        <td class="p-3 border border-gray-200">₦<%= loan.amount_to_repay %></td>
+                        <td class="p-3 border border-gray-200">
+                          <form action="/deleteLoan/<%= loan._id %>" method="POST" onsubmit="return confirm('Are you sure?')">
+                            <button class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 text-xs">Delete</button>
+                          </form>
+                        </td>
+                        <td class="p-3 border border-gray-200">
+                          <span class="<%= loan.status === 'Active' ? 'text-green-600' : 'text-red-600' %> font-semibold">
+                            <%= loan.status %>
+                          </span>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>                
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      $(document).ready(function () {
+        $("#suppliersTable").DataTable({
+          dom: "Bfrtip",
+          buttons: ["copy", "excel", "csv", "pdf", "print"],
+        });
+      });
+    </script>
+  </body>
+</html>
