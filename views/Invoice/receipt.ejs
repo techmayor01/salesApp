@@ -63,13 +63,10 @@
 </head>
 <body class="bg-gray-100 p-4 flex flex-col items-center min-h-screen">
 
-  <!-- Initial Submit Button -->
-  <button id="submitBtn" class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition">
-    Submit
-  </button>
+
 
   <!-- Popup with buttons -->
-  <div id="popup" class="popup-bg" aria-hidden="true" >
+  <div id="popup" class="popup-bg active" aria-hidden="false" >
     <div class="popup-content flex flex-col gap-4 items-center">
       <div class="flex flex-col gap-4 items-center">
         <h2 class="text-lg font-semibold">Select Print Option</h2>
@@ -81,9 +78,9 @@
       <button onclick="printSection('thermal')" class="bg-gray-800 text-white px-6 py-2 rounded hover:bg-black w-full">
         Print Thermal
       </button>
-      <button onclick="closePopup()" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 w-full">
+      <a href="/manageInvoice" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 w-full" style="text-align: center;">
         Close
-      </button>
+      </a>
     </div>
   </div>
 
@@ -91,29 +88,37 @@
   <div id="normal" class="print-section hidden w-full flex justify-center">
     <div class="bg-white p-4 shadow-lg w-full max-w-3xl">
       <div class="text-center border-b pb-4 mb-4">
-        <img src="public/media/icons/logo.png" alt="" width="100%">
+        <img src="../media/icons/logo.png" alt="" width="100%">
         <p class="text-sm">CREDIT INVOICE</p>
       </div>
 
       <div class="grid grid-cols-2 gap-4 text-sm mb-2">
-        <div>
-          <h2 class="font-semibold">HEAD OFFICE:</h2>
-          <p>T12 Tafawa Balewa Rd</p>
-          <p>Opp. Plateau Riders, Jos</p>
-          <p>08064565019</p>
-        </div>
-        <div>
-          <h2 class="font-semibold">BRANCH OFFICE:</h2>
-          <p>No. 3 Emir Road, Adjacent AP Filling Station, Lafia</p>
-          <p>Nasarawa State</p>
-          <p>07037961222</p>
-        </div>
+      <% if (isHeadOffice) { %>
+          <div>
+            <h2 class="font-semibold">HEAD OFFICE:</h2>
+            <p><%= branch.branch_address %></p>
+            <p><%= branch.branch_phone %></p>
+          </div>
+        <% } else { %>
+          <div>
+            <h2 class="font-semibold">HEAD OFFICE:</h2>
+            <p><%= headOffice.branch_address %></p>
+            <p><%= headOffice.branch_phone %></p>
+          </div>
+
+          <div class="mt-4">
+            <h2 class="font-semibold">BRANCH OFFICE:</h2>
+            <p><%= branch.branch_address %></p>
+            <p><%= branch.branch_phone %></p>
+          </div>
+        <% } %>
+
       </div>
 
       <div class="grid grid-cols-2 text-sm mb-4 border-t border-b py-2">
-        <div><strong>Name:</strong> AONDONENGEN NASCO</div>
-        <div><strong>Date:</strong> 2018-04-12</div>
-        <div><strong>Address:</strong> ASL0012452</div>
+        <p><strong>Customer:</strong> <%= invoice.customer_name %></p>
+        <div><strong>Date:</strong> <%= new Date(invoice.payment_date).toLocaleDateString() %></div>
+        <div><strong>Invoice #:</strong> <%= invoice.invoice_no %></div>
       </div>
 
       <table class="w-full text-sm mb-4 border">
@@ -126,47 +131,65 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td class="p-1 border">10</td><td class="p-1 border">SHORT*36</td><td class="p-1 border text-right">₦2,730</td><td class="p-1 border text-right">₦27,300</td></tr>
-          <tr><td class="p-1 border">11</td><td class="p-1 border">MINISHORT*48</td><td class="p-1 border text-right">₦1,900</td><td class="p-1 border text-right">₦20,900</td></tr>
-          <tr><td class="p-1 border">20</td><td class="p-1 border">FAN*36</td><td class="p-1 border text-right">₦1,800</td><td class="p-1 border text-right">₦36,000</td></tr>
-          <tr><td class="p-1 border">2</td><td class="p-1 border">BON*200G</td><td class="p-1 border text-right">₦2,100</td><td class="p-1 border text-right">₦4,200</td></tr>
+          <% invoice.items.forEach(item => { %>
+          <tr>
+            <td class="p-1 border"><%= item.qty %></td>
+            <td class="p-1 border"><%= item.product_name %></td>
+            <td class="p-1 border text-right"><%= item.rate %></td>
+            <td class="p-1 border text-right"><%= item.total %></td>
+          </tr>
+          <% }); %>
         </tbody>
       </table>
 
       <div class="text-sm mb-2">
         <div class="flex justify-between font-semibold">
-          <span>Total:</span><span>₦258,570.00</span>
+          <span>Total:</span><span>₦<%= invoice.grand_total.toLocaleString() %></span>
         </div>
-        <p class="italic">Amount: Two Hundred and Fifty-Eight Thousand, Five Hundred and Seventy Naira</p>
+          <p class="italic">Amount: <%= totalInWords %> Naira, Only.</p>
       </div>
 
       <div class="text-sm border-t border-b py-2 mb-2">
-        <div class="flex justify-between"><span>Payment:</span><span>₦0.00</span></div>
-        <div class="flex justify-between"><span>Balance:</span><span>₦377,988.00</span></div>
+        <div class="flex justify-between"><span>Payment:</span><span>₦<%= invoice.paid_amount.toLocaleString() %></span></div>
+        <div class="flex justify-between"><span>Balance:</span><span>₦<%= invoice.remaining_amount.toLocaleString() %></span></div>
       </div>
 
       <div class="grid grid-cols-2 text-sm mt-4">
         <p class="border-t pt-2 w-40 text-center">Customer's Sign</p>
         <p class="border-t pt-2 w-40 text-center">Manager's Sign</p>
       </div>
-      <p class="text-center text-sm mt-2">Sold by: OKAFOR STANLEY | Time: 16:10:39</p>
+      <p class="text-center text-sm mt-2">Sold by: <%= invoice.createdBy?.fullname || 'Staff' %> | Time: <%= new Date(invoice.createdAt).toLocaleTimeString() %></p>
     </div>
   </div>
 
   <!-- Thermal Receipt -->
   <div id="thermal" class="print-section hidden w-full flex justify-center">
     <div class="receipt w-[58mm] text-[10px] font-mono leading-tight text-black bg-white p-2">
-      <img src="public/media/icons/logo.png" alt="" width="100%">
+      <img src="../media/icons/logo.png" alt="" width="100%">
+    <% if (isHeadOffice) { %>
+      <!-- Head Office Only -->
+      <div class="text-center mb-2 mt-2">
+        <%= branch.branch_address %><br/>
+        <%= branch.branch_phone %>
+      </div>
+    <% } else { %>
+      <!-- Head Office -->
       <div class="text-center mb-2">
-        T12 Tafawa Balewa Rd, Jos<br/>Opp. Plateau Riders<br/>08064565019
+        <%= headOffice.branch_address %><br/>
+        <%= headOffice.branch_phone %>
       </div>
+
+      <!-- Branch Office -->
       <div class="text-center mb-2 border-t border-dashed pt-1">
-        BRANCH: No. 3 Emir Rd, Lafia<br/>Adj. AP Filling Station<br/>07037961222
+        BRANCH: <%= branch.branch_address %><br/>
+        <%= branch.branch_phone %>
       </div>
+    <% } %>
+
       <div class="mb-1 border-t border-dashed pt-1">
-        Name: AONDONENGEN NASCO<br/>
-        Addr: ASL0012452<br/>
-        Date: 2018-04-12
+        Name: <%= invoice.customer_name %><br/>
+        Date: <%= new Date(invoice.payment_date).toLocaleDateString() %><br/>
+        Invoice #: <%= invoice.invoice_no %>
       </div>
       <div class="border-t border-dashed pt-1">
         <table class="w-full">
@@ -179,32 +202,36 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td>SHORT*36</td><td class="text-right">10</td><td class="text-right">2,730</td><td class="text-right">27,300</td></tr>
-            <tr><td>MINISHORT*48</td><td class="text-right">11</td><td class="text-right">1,900</td><td class="text-right">20,900</td></tr>
-            <tr><td>FAN*36</td><td class="text-right">20</td><td class="text-right">1,800</td><td class="text-right">36,000</td></tr>
-            <tr><td>BON*200G</td><td class="text-right">2</td><td class="text-right">2,100</td><td class="text-right">4,200</td></tr>
+            <% invoice.items.forEach(item => { %>
+            <tr>
+              <td><%= item.product_name %></td>
+              <td class="text-right"><%= item.qty %></td>
+              <td class="text-right"><%= item.rate %></td>
+              <td class="text-right"><%= item.total %></td>
+            </tr>
+             <% }); %>
           </tbody>
         </table>
       </div>
       <div class="border-t border-dashed pt-1 mt-1">
         <div class="flex justify-between">
-          <span>Total:</span><span>₦258,570.00</span>
+          <span>Total:</span><span>₦<%= invoice.grand_total.toLocaleString() %></span>
         </div>
         <div class="text-xs italic mt-1">
-          Amt in Words: Two Hundred Fifty-Eight Thousand, Five Hundred and Seventy Naira Only
+          Amt in Words: <%= totalInWords %> Naira, Only.
         </div>
       </div>
       <div class="mt-1">
-        <div class="flex justify-between"><span>Payment:</span><span>₦0.00</span></div>
-        <div class="flex justify-between"><span>Balance:</span><span>₦377,988.00</span></div>
+        <div class="flex justify-between"><span>Payment:</span><span>₦<%= invoice.paid_amount.toLocaleString() %></span></div>
+        <div class="flex justify-between"><span>Balance:</span><span>₦<%= invoice.remaining_amount.toLocaleString() %></span></div>
       </div>
       <div class="flex justify-between text-xs mt-2">
         <div class="text-center border-t w-24">Customer</div>
         <div class="text-center border-t w-24">Manager</div>
       </div>
       <div class="text-center mt-1">
-        Sold by: OKAFOR STANLEY<br/>
-        Time: 16:10:39
+        <%= invoice.createdBy?.fullname || 'Staff' %><br/>
+        <%= new Date(invoice.createdAt).toLocaleTimeString() %>
       </div>
       <div class="text-center text-xs mt-2">
         Thank you for your purchase!
@@ -213,45 +240,45 @@
   </div>
 
   <!-- Script -->
- <script>
-    const submitBtn = document.getElementById('submitBtn');
-    const popup = document.getElementById('popup');
+<script>
+  const popup = document.getElementById('popup');
 
-    submitBtn.addEventListener('click', () => {
-      submitBtn.style.display = 'none';
-      popup.classList.add('active');
-      popup.setAttribute('aria-hidden', 'false');
-    });
+  function closePopup() {
+    popup.classList.remove('active');
+    popup.setAttribute('aria-hidden', 'true');
+  }
 
-    function closePopup() {
-      popup.classList.remove('active');
-      popup.setAttribute('aria-hidden', 'true');
-      submitBtn.style.display = 'inline-block';
-    }
+  function openPopup() {
+    popup.classList.add('active');
+    popup.setAttribute('aria-hidden', 'false');
+  }
 
-    function printSection(id) {
-      closePopup();  // Hide popup
+  function printSection(id) {
+    // Hide popup before printing
+    closePopup();
 
-      const normal = document.getElementById('normal');
-      const thermal = document.getElementById('thermal');
-      const sectionToPrint = document.getElementById(id);
+    const normal = document.getElementById('normal');
+    const thermal = document.getElementById('thermal');
+    const sectionToPrint = document.getElementById(id);
 
-      // Show the selected receipt
+    // Hide all receipts
+    normal.style.display = 'none';
+    thermal.style.display = 'none';
+
+    // Show chosen receipt
+    sectionToPrint.style.display = 'flex';
+
+    // After print or cancel, hide receipts and show popup again
+    window.onafterprint = () => {
       normal.style.display = 'none';
       thermal.style.display = 'none';
-      sectionToPrint.style.display = 'flex';
+      openPopup();
+    };
 
-      // Hide receipt once print is done or canceled
-      window.onafterprint = () => {
-        normal.style.display = 'none';
-        thermal.style.display = 'none';
-        submitBtn.style.display = 'inline-block';
-      };
+    window.print();
+  }
+</script>
 
-      // Trigger print
-      window.print();
-    }
-  </script>
 
 </body>
 </html>

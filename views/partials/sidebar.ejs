@@ -108,7 +108,7 @@ id="sidebar"
           <li><a href="/addProduct" class="block py-1 hover:text-blue-600">Add Stock</a></li>
           <li><a href="/manageProduct" class="block py-1 hover:text-blue-600">Manage Stock</a></li>
           <li><a href="/stockTransfer" class="block py-1 hover:text-blue-600">Stock Transfer</a></li>
-          <li><a href="/adjustStock" class="block py-1 hover:text-blue-600">Adjust Stock</a></li>
+          <!-- <li><a href="/adjustStock" class="block py-1 hover:text-blue-600">Adjust Stock</a></li> -->
         </ul>
       </li>
     <!--Expired Product -->
@@ -236,6 +236,9 @@ id="sidebar"
         <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
           <li><a href="/addStaffs" class="block py-1 hover:text-blue-600">Add Staff</a></li>
           <li><a href="/manageStaffs" class="block py-1 hover:text-blue-600">Manage Staff</a></li>
+           <% if (user.role === 'owner') { %>
+          <li><a href="/staffLogs" class="block py-1 hover:text-blue-600">Staff Logs</a></li>
+          <% } %>
 
 
         </ul>

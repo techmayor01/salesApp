@@ -31,43 +31,54 @@
               <thead>
                 <tr class="font-semibold text-gray-700 border border-gray-200">
                   <th class="p-3 border border-gray-200">No</th>
-                  <th class="p-3 border border-gray-200">Customers</th>
-                  <th class="p-3 border border-gray-200">Mobile</th>
-                  <th class="p-3 border border-gray-200">Email</th>
-                  <th class="p-3 border border-gray-200">Date</th>
+                  <th class="p-3 border border-gray-200">User</th>
+                  <th class="p-3 border border-gray-200">Transaction Type</th>
                   <th class="p-3 border border-gray-200">Total Amount</th>
                   <th class="p-3 border border-gray-200">Paid Amount</th>
                   <th class="p-3 border border-gray-200">Remaining Amount</th>
+                  <th class="p-3 border border-gray-200">Date</th>
+                  <th class="p-3 border border-gray-200">Action</th>
                 </tr>
               </thead>
-              <tbody>
-                <% if (customers.length > 0) { 
-                     let rowNumber = 1;
-                %>
-                  <% customers.forEach((customer) => { %>
-                    <% customer.transactions.forEach((transaction) => { %>
-                      <tr class="border-t hover:bg-gray-50 even:bg-gray-50 transition">
-                        <td class="p-3 border border-gray-200"><%= rowNumber++ %></td>
-                        <td class="p-3 border border-gray-200"><%= customer.customer_name %></td>
-                        <td class="p-3 border border-gray-200"><%= customer.mobile %></td>
-                        <td class="p-3 border border-gray-200"><%= customer.email %></td>
-                        <td class="p-3 border border-gray-200">
-                          <%= new Date(customer.createdAt).toISOString().slice(0, 10) %>
-                        </td>
-                        <td class="p-3 border border-gray-200">₦ <%= transaction.total ?? 0 %></td>
-                        <td class="p-3 border border-gray-200">₦ <%= transaction.paid_amount ?? 0 %></td>
-                        <td class="p-3 border border-gray-200">₦ <%= transaction.remaining_amount ?? 0 %></td>
-                      </tr>
-                    <% }) %>
-                  <% }) %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="8" class="text-center text-gray-500 py-4">
-                      No data available in table
+             <tbody>
+              <% if (transactions.length > 0) { 
+                  let rowNumber = 1;
+              %>
+                <% transactions.forEach((transaction) => { %>
+                  <tr class="border-t hover:bg-gray-50 even:bg-gray-50 transition">
+                    <td class="p-3 border border-gray-200"><%= rowNumber++ %></td>
+                    <td class="p-3 border border-gray-200">
+                      <% if (transaction.transactionType === 'Loan') { %>
+                        <%= transaction.userId?.loaner || 'N/A' %>
+                      <% } else { %>
+                        <%= transaction.userId?.customer_name || 'N/A' %>
+                      <% } %>
                     </td>
+
+                    <td class="p-3 border border-gray-200"><%= transaction.transactionType %></td>
+                    <td class="p-3 border border-gray-200">₦ <%= transaction.expectedAmount %></td>
+                    <td class="p-3 border border-gray-200">₦ <%= transaction.amountReceived %></td>
+                    <td class="p-3 border border-gray-200">₦ <%= transaction.balanceRemaining %></td>
+                    <td class="p-3 border border-gray-200">
+                      <%= new Date(transaction.paymentDate).toISOString().slice(0, 10) %>
+                    </td>
+                    <td class="p-3 border border-gray-200">
+                      <a href="/deletetransactionHistory/<%= transaction._id %>" class="bg-red-500 text-white px-2 py-1 rounded-md">
+                        <i class="fas fa-trash-alt ml-2"></i>
+                      </a>
+                    </td>
+                   
                   </tr>
-                <% } %>
-              </tbody>           
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="7" class="text-center text-gray-500 py-4">
+                    No data available in table
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+           
             </table>
             
             </div>

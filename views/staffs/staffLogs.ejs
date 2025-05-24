@@ -1,0 +1,118 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="lg:w-[220px] lg:p-4">
+          <%- include ('../partials/sidebar') %>
+        </div>
+        <main
+          class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200">
+          <h2 class="text-2xl font-semibold text-gray-800">STAFF LOG</h2>
+          <form method="GET" action="/staffLogs" class="mb-4 flex items-center space-x-2">
+  <label for="branchSelect" class="font-semibold">Filter by Branch:</label>
+  <select
+    id="branchSelect"
+    name="branch"
+    onchange="this.form.submit()"
+    class="border rounded p-2"
+  >
+    <option value="">All Branches</option>
+    <% branches.forEach(branch => { %>
+      <option value="<%= branch._id %>" <%= selectedBranch == branch._id ? 'selected' : '' %>>
+        <%= branch.branch_name %>
+      </option>
+    <% }) %>
+  </select>
+</form>
+          <div class="max-w-6xl mx-auto mt-6">
+            <!-- Card -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <!-- Table Header -->
+              <div
+                class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <div>
+                  <h2 class="text-2xl font-semibold text-gray-800" style="text-transform: uppercase; font-weight: bold;">
+                    Welcome, <%= user.fullname %> (Owner)
+                  </h2>
+                </div>
+              </div>
+
+              <!-- Table -->
+              <div class="w-full overflow-x-auto lg:overflow-x-visible">
+                <table
+  id="categoriesTable"
+  class="min-w-full px-1 text-sm text-left bg-white border border-gray-200 rounded-lg shadow-sm"
+>
+  <thead>
+    <tr class=" text-gray-700">
+      <th class="p-3 border border-gray-200">No</th>
+      <th class="p-3 border border-gray-200">Full Name</th>
+      <th class="p-3 border border-gray-200">Sign In</th>
+      <th class="p-3 border border-gray-200">Log Out</th>
+      <th class="p-3 border border-gray-200">User Type/Position</th>
+      <th class="p-3 border border-gray-200">Option</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (logs && logs.length > 0) { %>
+      <% logs.forEach((staff, index) => { %>
+        <tr class="border text-sm">
+          <td class="p-3 border border-gray-200"><%= index + 1 %></td>
+          <td class="p-3 border border-gray-200"><%= staff.user.fullname %></td>
+          <td class="p-3 border border-gray-200">
+            <%= new Date(staff.signInTime).toLocaleString() %>
+          </td>
+          <td class="p-3 border border-gray-200">
+            <%= staff.signOutTime ? new Date(staff.signOutTime).toLocaleString() : '—' %>
+          </td>
+          <td class="p-3 border border-gray-200 capitalize">
+            <%= staff.role %>
+          </td>
+          <td class="p-3 border border-gray-200">
+            <div class="flex space-x-2">
+              <form action="/deleteStaff/<%= staff._id %>" method="post" onsubmit="return confirm('Are you sure?');">
+                <button
+                  class="bg-red-500 text-white px-3 py-1 text-sm hover:bg-red-600">
+                  🗑 Delete
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+    <% } else { %>
+      <tr>
+        <td colspan="6" class="text-center py-4 text-gray-500">No staff found.</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+              </div>
+            </div>
+          </div>
+           <%- include ('../partials/footer') %>
+        </main>
+      </div>
+    </div>
+    <script>
+      $(document).ready(function () {
+    $("#categoriesTable").DataTable({
+      responsive: true,
+      scrollX: true,
+      dom: "Bfrtip",
+      buttons: ["copy", "excel", "csv", "pdf", "print"],
+      language: {
+        searchPlaceholder: "Search categories...",
+        search: "",
+      },
+    });
+  });
+    </script>
+  </body>
+</html>

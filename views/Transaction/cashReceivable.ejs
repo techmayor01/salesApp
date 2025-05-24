@@ -16,143 +16,148 @@
             <h1 class="text-2xl font-semibold">Cash Receivable</h1>
           </div>
           <div class="bg-white p-6 border border-gray-200">
-            <div class="w-1/2">
-              <!-- Search Customer -->
-              <div class="flex gap-10 text-sm">
-                <label class="block text-gray-700  mb-1 w-48"
-                  >Search Customer <span class="text-red-500">*</span></label
-                >
-                <div class="w-full">
-                  <input
-                      id="customerSearch"
-                      type="text"
-                      placeholder="Search Customer"
-                      class="w-full border border-green-500 p-2 mb-4" />
+        <form action="/cashReceivable" method="post">
+  <input type="hidden" name="selectedUserId" id="selectedUserId" />
+  <input type="hidden" name="selectedUserType" id="selectedUserType" />
 
-                    <ul id="customerList" class="border border-gray-200 mt-1 bg-white shadow-md absolute z-10 w-full hidden"></ul>
+  <div class="w-1/2">
+    <!-- Transaction Type -->
+    <div class="flex gap-10 text-sm mb-4">
+      <label class="block text-gray-700 mb-1 w-48">Transaction Type <span class="text-red-500">*</span></label>
+      <select id="transactionType" class="w-full border border-green-500 p-2 rounded">
+        <option value="">Select Type</option>
+        <option value="customer">Customer Debt</option>
+        <option value="loan">Loan Repayment</option>
+      </select>
+    </div>
 
-                    <div id="customerDetails" class="text-sm space-y-1 mt-2"></div>
+    <!-- Search -->
+    <div class="flex gap-10 text-sm">
+      <label class="block text-gray-700 mb-1 w-48">Search Name <span class="text-red-500">*</span></label>
+      <div class="w-full relative">
+        <input id="searchInput" type="text" placeholder="Search by Name" class="w-full border border-green-500 p-2 mb-4" />
+        <ul id="resultList" class="border border-gray-200 mt-1 bg-white shadow-md absolute z-10 w-full hidden"></ul>
+        <div id="resultDetails" class="text-sm space-y-1 mt-2"></div>
+      </div>
+    </div>
 
-                    <script>
-                      const searchInput = document.getElementById('customerSearch');
-                      const listEl = document.getElementById('customerList');
-                      const detailsDiv = document.getElementById('customerDetails');
+    <!-- Amount -->
+    <div class="flex gap-10 text-sm my-3">
+      <label class="block text-gray-700 font-medium mt-4 w-48">Cash Received <span class="text-red-500">*</span></label>
+      <div class="flex border border-green-500 overflow-hidden w-full">
+        <span class="bg-green-200 text-white px-3 flex items-center">₦</span>
+        <input type="number" name="amount" placeholder="Amount" class="w-full p-2 border-none outline-none" required />
+      </div>
+    </div>
 
-                      searchInput.addEventListener('input', function () {
-                        const query = this.value.trim();
+    <!-- Date -->
+    <div class="flex gap-10 text-sm my-3">
+      <label class="block text-gray-700 font-medium mt-4 w-48">Date <span class="text-red-500">*</span></label>
+      <input type="date" name="date" class="w-full border border-green-500 p-2" required />
+    </div>
 
-                        if (query.length < 2) {
-                          listEl.classList.add('hidden');
-                          detailsDiv.innerHTML = '';
-                          return;
-                        }
+    <!-- Payment Type -->
+    <div class="flex gap-10 text-sm my-3">
+      <label class="block text-gray-700 font-medium mt-4 w-48">Payment Type <span class="text-red-500">*</span></label>
+      <select name="paymentType" class="w-full border border-green-500 p-2 rounded" required>
+        <option value="">Select Payment Type</option>
+        <option value="Cash">Cash</option>
+        <option value="Credit Card">Credit Card</option>
+        <option value="Bank Transfer">Bank Transfer</option>
+      </select>
+    </div>
 
-                        fetch(`/api/searchCustomers?q=${encodeURIComponent(query)}`)
-                          .then(res => res.json())
-                          .then(customers => {
-                            if (customers.length === 0) {
-                              listEl.classList.add('hidden');
-                              listEl.innerHTML = '';
-                              detailsDiv.innerHTML = '<p class="text-gray-500">No matching customer found.</p>';
-                              return;
-                            }
+    <!-- Reference -->
+    <div class="flex gap-10 text-sm my-3">
+      <div class="w-48"></div>
+      <input type="text" name="reference" placeholder="Payment Type Reference # / Detail" class="w-full border border-green-500 p-2 mt-2" />
+    </div>
 
-                            listEl.innerHTML = '';
-                            customers.forEach((c, i) => {
-                              const item = document.createElement('li');
-                              item.textContent = `${c.customer_name} (${c.mobile})`;
-                              item.className = "p-2 hover:bg-green-100 cursor-pointer";
-                              item.addEventListener('click', () => {
-                                searchInput.value = c.customer_name;
-                                listEl.classList.add('hidden');
-                                detailsDiv.innerHTML = `
-                                  <h2 class="text-green-700 font-semibold text-lg mb-2">Payment Details:</h2>
-                                  <div class="border-t border-green-500 mb-2"></div>
-                                  <p><strong>Customers:</strong> ${c.customer_name}</p>
-                                  <p><strong>Mobile:</strong> ${c.mobile}</p>
-                                  <p><strong>Email:</strong> ${c.email}</p>
-                                  <p><strong>Billing Address:</strong> ${c.address}</p>
-                                  <div class="border-t-2 border-green-500 my-2"></div>
-                                  <p><strong>Total Amount:</strong> ₦${c.total_amount ?? 0}</p>
-                                  <p><strong>Paid Amount:</strong> ₦${c.paid_amount ?? 0}</p>
-                                  <div class="border-t-2 border-green-500 my-2"></div>
-                                  <p><strong>Remaining Amount:</strong> ₦${c.remaining_amount ?? 0}</p>
-                                `;
-                              });
-                              listEl.appendChild(item);
-                            });
+    <!-- Submit -->
+    <div class="flex gap-10 text-sm my-3">
+      <div class="w-48"></div>
+      <button class="bg-green-500 text-white px-6 py-2 mt-4 w-full">Submit Payment</button>
+    </div>
+  </div>
+        </form>
 
-                            listEl.classList.remove('hidden');
-                          })
-                          .catch(err => {
-                            console.error('Search failed', err);
-                          });
-                      });
-                    </script>
 
-                </div>
-              </div>
-
-              <div class="flex gap-10 text-sm my-3">
-                <!-- Cash Received -->
-              <label class="block text-gray-700 font-medium mt-4 w-48"
-                >Cash Received <span class="text-red-500">*</span></label
-              >
-              <div class="flex border border-green-500 overflow-hidden w-full">
-                <span class="bg-green-200 text-white px-3 flex items-center"
-                  >$</span
-                >
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  class="w-full p-2 border-none outline-none" />
-              </div>
-              </div>
-
-              <div class="flex gap-10 text-sm my-3">
-                <!-- Date -->
-              <label class="block text-gray-700 font-medium mt-4 w-48"
-                >Date <span class="text-red-500">*</span></label
-              >
-              <input
-                type="date"
-                class="w-full border border-green-500 p-2 " />
-              </div>
-
-              <div class="flex gap-10 text-sm my-3">
-                <!-- Payment Type -->
-              <label class="block text-gray-700 font-medium mt-4 w-48"
-                >Payment Type <span class="text-red-500">*</span></label
-              >
-              <select class="w-full border border-green-500 p-2 rounded">
-                <option>Select Payment Type</option>
-                <option>Cash</option>
-                <option>Credit Card</option>
-                <option>Bank Transfer</option>
-              </select>
-              </div>
-
-              <div class="flex gap-10 text-sm my-3">
-                <div class="w-48"></div>
-                <input
-                type="text"
-                placeholder="Payment Type Reference # / Detail"
-                class="w-full border border-green-500 p-2  mt-2" />
-              </div>
-
-              <div class="flex gap-10 text-sm my-3">
-                <div class="w-48"></div>
-                <!-- Submit Button -->
-              <button
-                class="bg-green-500 text-white px-6 py-2  mt-4 w-full">
-                Cash Received
-              </button>
-              </div>
-              
-            </div>
           </div>
         </main>
       </div>
     </div>
+
+<script>
+  const transactionType = document.getElementById('transactionType');
+  const searchInput = document.getElementById('searchInput');
+  const resultList = document.getElementById('resultList');
+  const resultDetails = document.getElementById('resultDetails');
+  const selectedUserIdInput = document.getElementById('selectedUserId');
+  const selectedUserTypeInput = document.getElementById('selectedUserType');
+
+  searchInput.addEventListener('input', function () {
+    const type = transactionType.value;
+    const query = this.value.trim();
+
+    if (!type || query.length < 2) {
+      resultList.classList.add('hidden');
+      resultDetails.innerHTML = '';
+      return;
+    }
+
+    const endpoint = type === 'customer' ? '/api/searchCustomers' : '/api/searchLoaners';
+
+    fetch(`${endpoint}?q=${encodeURIComponent(query)}`)
+      .then((res) => res.json())
+      .then((results) => {
+        resultList.innerHTML = '';
+        resultDetails.innerHTML = '';
+
+        if (!Array.isArray(results) || results.length === 0) {
+          resultDetails.innerHTML = '<p class="text-gray-500">No match found.</p>';
+          resultList.classList.add('hidden');
+          return;
+        }
+
+        results.forEach((item) => {
+          const li = document.createElement('li');
+          const displayName = type === 'customer' ? item.customer_name : item.name;
+          li.textContent = `${displayName} (${item.mobile})`;
+          li.className = 'p-2 hover:bg-green-100 cursor-pointer';
+
+          li.addEventListener('click', () => {
+            searchInput.value = displayName;
+            selectedUserIdInput.value = item._id;
+            selectedUserTypeInput.value = type;
+
+            resultList.classList.add('hidden');
+            resultDetails.innerHTML = `<p><strong>Remaining Amount:</strong> ₦${type === 'customer' ? item.total_debt : item.total_debt}</p>`;
+
+            if (type === 'loan' && item.loans) {
+              resultDetails.innerHTML += '<div class="mt-2"><strong>Loan Details:</strong><ul class="list-disc pl-5">';
+              item.loans.forEach(loan => {
+                resultDetails.innerHTML += `
+                  <li>
+                    ₦${loan.amount_to_repay} due by ${new Date(loan.loanContractEndDate).toLocaleDateString()}
+                  </li>`;
+              });
+              resultDetails.innerHTML += '</ul></div>';
+            }
+          });
+
+          resultList.appendChild(li);
+        });
+
+        resultList.classList.remove('hidden');
+      })
+      .catch((err) => {
+        console.error('Search failed:', err);
+        resultDetails.innerHTML = '<p class="text-red-500">An error occurred while searching.</p>';
+      });
+  });
+</script>
+
+
+
   </body>
 </html>

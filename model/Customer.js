@@ -25,10 +25,14 @@ const customerSchema = new mongoose.Schema({
   ],
   credit_limit: { type: Number },
   total_debt: { type: Number, default: 0 },
+  remaining_amount: { type: Number, default: 0 },
+
+  sales_type: { type: String, enum: ['cash', 'credit'] },
+  cash_sales_count: { type: Number, default: 0 },
+  credit_sales_count: { type: Number, default: 0 },
 
   createdAt: { type: Date, default: Date.now }
 });
 
 const Customer = mongoose.model('Customer', customerSchema);
-
 module.exports = Customer;

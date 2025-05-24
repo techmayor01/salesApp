@@ -54,13 +54,16 @@
                           <td class="p-3 border border-gray-200"><%= invoice.product %></td>
                           <td class="p-3 border border-gray-200"><%= invoice.createdAt?.toDateString() || 'N/A' %></td>
                       
-                        <td  class="p-3 border border-gray-200"><%= invoice.total %></td>
+                        <td  class="p-3 border border-gray-200"><%= invoice.grand_total %></td>
                           <td class="p-3 border border-gray-200"><%= invoice.paid_amount %></td>
                           <td class="p-3 border border-gray-200"><%= invoice.remaining_amount %></td>
                         
-                          <td class="p-3 border border-gray-200">
+                          <td class="p-3 border border-gray-200" style="display: flex; gap: 10px;">
                             <a href="/deleteProduct/<%= invoice._id %>" class="bg-red-500 text-white px-2 py-1 rounded-md">
                               <i class="fa-solid fa-trash"></i>
+                            </a>
+                            <a href="/receipt/<%= invoice._id %>" class="bg-blue-500 text-white px-2 py-1 rounded-md">
+                              Print
                             </a>
                           </td>
                         </tr>

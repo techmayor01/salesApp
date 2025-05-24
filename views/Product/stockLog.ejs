@@ -1,0 +1,131 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="w-[220px] p-4 h-[100vh]">
+          <%- include ('../partials/sidebar') %>
+        </div>
+         <main
+          class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200">
+          <!-- Page Title -->
+          <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Received Stock Log</h1>
+          </div>
+
+          <!-- Table Container -->
+          <section class="max-w-7xl mx-auto bg-white shadow-md rounded-lg p-6">
+
+            <!-- Table Wrapper -->
+            <div class="w-full overflow-x-auto lg:overflow-x-visible">
+              
+                <% if (logs && logs.length > 0) { %>
+                  <table
+                    id="productsTable"
+                    class="min-w-full px-1 text-sm text-left bg-white border border-gray-200 rounded-lg shadow-sm"
+                  >
+                    <thead>
+                      <tr class="bg-gray-100">
+                        <th class="border border-gray-300 px-4 py-2">NO.</th>
+                        <th class="border border-gray-300 px-4 py-2">Date & Time</th>
+                        <th class="border border-gray-300 px-4 py-2">Product</th>
+                        <th class="border border-gray-300 px-4 py-2">Old Value</th>
+                        <th class="border border-gray-300 px-4 py-2">Neww Value</th>
+                        <th class="border border-gray-300 px-4 py-2">Changed By</th>
+                        <th class="border border-gray-300 px-4 py-2">Changed Type</th>
+                        <th class="border border-gray-300 px-4 py-2">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% logs.forEach((log, index) => { %>
+                        <tr class="hover:bg-gray-50">
+                          <td class="p-3 border border-gray-200"><%= index + 1 %></td>
+                          <td class="border border-gray-300 px-4 py-2"><%= new Date(log.changedAt).toLocaleString() %></td>
+                          <td class="border border-gray-300 px-4 py-2"><%= log.productId?.product || 'N/A' %></td>
+                          <td class="border border-gray-300 px-4 py-2">
+  <% if (log.oldValue && typeof log.oldValue === 'object') { %>
+    <details>
+      <summary class="cursor-pointer text-blue-600">View Old</summary>
+      <pre class="whitespace-pre-wrap text-xs"><%= JSON.stringify(log.oldValue, null, 2) %></pre>
+    </details>
+  <% } else { %>
+    <%= log.oldValue || 'N/A' %>
+  <% } %>
+</td>
+<td class="border border-gray-300 px-4 py-2">
+  <% if (log.newValue && typeof log.newValue === 'object') { %>
+    <details>
+      <summary class="cursor-pointer text-green-600">View New</summary>
+      <pre class="whitespace-pre-wrap text-xs"><%= JSON.stringify(log.newValue, null, 2) %></pre>
+    </details>
+  <% } else { %>
+    <%= log.newValue || 'N/A' %>
+  <% } %>
+</td>
+
+                          <td class="border border-gray-300 px-4 py-2"><%= log.userId?.fullname || 'N/A' %></td>
+                          <td class="border border-gray-300 px-4 py-2 capitalize"><%= log.reason %></td>
+                          <td class="border border-gray-300 px-4 py-2 capitalize" style="display: flex; gap: 8px;">
+                            <a href="/viewLogs/<%= log._id %>" class="bg-blue-500 text-white px-2 py-1 rounded-md" style="background-color: #467c5a;">
+                              <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <a href="/deleteProductLog/<%= log._id %>" class="bg-red-500 text-white px-2 py-1 rounded-md">
+                              <i class="fa-solid fa-trash"></i>
+                            </a>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                <% } else { %>
+                  <p class="text-center text-gray-500 mt-4">No product logs available.</p>
+                <% } %>
+
+              
+                <script>
+                  $(document).ready(function () {
+                    $('#productsTable').DataTable();
+                  });
+                </script>
+            
+              
+            
+            </div>
+          </section>
+
+          <%- include('../partials/footer') %>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const getBtn = document.getElementById("getCreditorsBtn");
+        const tableSection = document.getElementById("creditorsTableSection");
+
+        getBtn.addEventListener("click", () => {
+          tableSection.classList.remove("hidden");
+        });
+      });
+    </script>
+        <script>
+      $(document).ready(function () {
+        $('#productsTable').DataTable({
+          responsive: true,
+          scrollX: true,
+          dom: 'Bfrtip',
+          buttons: ['copy', 'excel', 'csv', 'pdf', 'print'],
+          language: {
+            searchPlaceholder: 'Search products...',
+            search: '',
+          },
+        });
+      });
+    </script>
+  </body>
+</html>

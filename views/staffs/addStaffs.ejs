@@ -20,32 +20,46 @@
                 <h1 class="text-2xl font-semibold">Add Staff</h1>
                 <p class="text-xs text-gray-400 py-2">use this form to add Staff to database..</p>
             </div>
-            <!-- Staff User Name -->
-            <div class="grid grid-cols-3 items-center">
-                <label class="text-gray-700 text-sm">User Name <span class="text-red-500">*</span></label>
-                <input type="text" name="userName" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="User Name">
-            </div>
             <!-- Staff Full Name -->
             <div class="grid grid-cols-3 items-center">
                 <label class="text-gray-700 text-sm">Full Name <span class="text-red-500">*</span></label>
-                <input type="text" name="fullName" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Full Name">
+                <input type="text" name="fullname" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Full Name">
             </div>
+
+            <!-- Staff User Name -->
+            <div class="grid grid-cols-3 items-center">
+                <label class="text-gray-700 text-sm">Email<span class="text-red-500">*</span></label>
+                <input type="text" name="username" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Email">
+            </div>
+
             <!-- Password -->
             <div class="grid grid-cols-3 items-center">
                 <label class="text-gray-700 text-sm">Password <span class="text-red-500">*</span></label>
                 <input type="password" name="password" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Password">
             </div>
 
-
             <!-- User Type -->
             <div class="grid grid-cols-3 items-start">
                 <label class="text-gray-700 text-sm">User Type</label>
-                <select name="address" class="col-span-2 border-b border-gray-400 py-2 w-full" rows="3" placeholder="Address"> 
-                    <option value="Select User Type ">Select User Type </option>
-                    <option value="Admin">
+                <select name="role" class="col-span-2 border-b border-gray-400 py-2 w-full" rows="3" placeholder="Address"> 
+                    <option >Select User Type </option>
+                    <option value="admin">
                        Admin 
                     </option>
-                    <option value="Staff">Staff</option>    
+                    <option value="staff">Staff</option>    
+                </select>
+            </div>
+
+            <!-- Assign Staff to Branch  -->
+            <div class="grid grid-cols-3 items-start">
+                <label class="text-gray-700 text-sm">Assign Staff to Branch</label>
+                <select name="branch" class="col-span-2 border-b border-gray-400 py-2 w-full">
+                    <option value="">Select Branch</option>
+                    <% if (branches && branches.length > 0) { %>
+                    <% branches.forEach(branch => { %>
+                        <option value="<%= branch._id %>"><%= branch.branch_name %></option>
+                    <% }) %>
+                    <% } %>
                 </select>
             </div>
 

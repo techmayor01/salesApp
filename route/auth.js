@@ -12,6 +12,7 @@ const fs = require('fs');
 const path = require('path')
 const multer = require('multer');
 const moment = require('moment');
+const numberToWords = require('number-to-words');
 
 
 const bcrypt = require("bcrypt");
@@ -70,6 +71,9 @@ const ReceivedStock = require('../model/ReceivedStock');
 const Invoice = require('../model/Invoice');
 const Expense = require('../model/Expense');
 const ProductChangeLog = require("../model/ProductLog");
+const StockLog = require("../model/StockLog");
+const CashReceivable = require('../model/CashReceivable');
+const StaffLog = require("../model/StaffLog");
 
 
 
@@ -728,7 +732,7 @@ router.post("/updateCategory", (req, res) => {
 
 
 // ADD BRANCH LOGIC 
-router.get("/addBranch", (req, res) => {
+router.get("/addBranch", (req, res, next) => {
   if (!req.isAuthenticated()) {
     return res.redirect("/sign-in");
   }
@@ -737,10 +741,8 @@ router.get("/addBranch", (req, res) => {
     .populate("branch")
     .then(user => {
       if (!user) return res.redirect("/sign-in");
-
-      // Restrict access to only 'owner' role
       if (user.role !== 'owner') {
-        return res.redirect("/unauthorized"); // or use res.status(403).send("Unauthorized");
+        return res.redirect("/unauthorized");
       }
 
       Branch.findById(user.branch)
@@ -754,40 +756,45 @@ router.get("/addBranch", (req, res) => {
               });
             })
             .catch(err => {
-              console.error(err);
-              res.redirect('/error-404');
+              next(err);
             });
         })
         .catch(err => {
-          console.error(err);
-          res.redirect('/error-404');
+          next(err);
         });
     })
     .catch(err => {
-      console.error(err);
-      res.redirect("/error-404");
+      next(err);
     });
 });
 
+router.post("/addBranch", (req, res, next) => {
+  const { branch_name, branch_address, branch_phone } = req.body;
+  Branch.findOne({ branch_name: branch_name })
+    .then(existingBranch => {
+      if (existingBranch) {
+        return next(new Error("Branch name already exists."));
+      }
 
-router.post("/addBranch", (req, res) => {
-    const { branch_name, branch_address } = req.body;
-
-    const newBranch = new Branch({
+      const newBranch = new Branch({
         branch_name,
-        branch_address
-    });
-  
-    newBranch.save()
-      .then(savedBranch => {
-        console.log("Branch added:", savedBranch);
-        res.redirect("/manageBranch")
-      })
-      .catch(err => {
-        console.error("Error adding supplier:", err);
-        res.status(500).json({ message: "Failed to add supplier", error: err.message });
+        branch_address,
+        branch_phone
       });
+
+      return newBranch.save();
+    })
+    .then(savedBranch => {
+      if (savedBranch) {
+        res.redirect("/manageBranch");
+      }
+    })
+    .catch(err => {
+      next(err);
+    });
 });
+
+
 
 router.get("/manageBranch", (req, res) => {
   if (req.isAuthenticated()) {
@@ -1245,7 +1252,7 @@ router.get("/addProduct", (req, res) => {
 });
   
 
-router.post("/addProduct", upload.single("product_image"), (req, res) => {
+router.post("/addProduct", upload.single("product_image"), (req, res, next) => {
   const {
     product,
     category,
@@ -1264,78 +1271,312 @@ router.post("/addProduct", upload.single("product_image"), (req, res) => {
   const unitCodes = Array.isArray(unitCode) ? unitCode : [unitCode];
   const lowStockAlerts = Array.isArray(lowStockAlert) ? lowStockAlert.map(Number) : [Number(lowStockAlert)];
   const sellPrices = Array.isArray(sellPrice) ? sellPrice.map(Number) : [Number(sellPrice)];
-
   const supplierPriceNum = Number(supplierPrice);
-
   const totalWorth = quantities[0] * supplierPriceNum;
 
   const variants = [];
 
-  const firstVariant = {
+  variants.push({
     quantity: quantities[0],
     unitCode: unitCodes[0],
     lowStockAlert: lowStockAlerts[0],
-    // supplierPrice removed here
     sellPrice: sellPrices[0],
     totalWorth,
     totalPotentialRevenue: quantities[0] * sellPrices[0],
     actualRevenue: 0
-  };
-
-  variants.push(firstVariant);
+  });
 
   for (let i = 1; i < quantities.length; i++) {
     const qty = quantities[i];
-    const unitCode = unitCodes[i];
-    const sellPriceValue = sellPrices[i];
-    const baseUnitQuantity = quantities[0] * qty;
-
-    const revenue = baseUnitQuantity * sellPriceValue;
+    const baseQty = quantities[0] * qty;
+    const revenue = baseQty * sellPrices[i];
 
     variants.push({
-      quantity: baseUnitQuantity,
-      unitCode,
+      quantity: baseQty,
+      unitCode: unitCodes[i],
       lowStockAlert: lowStockAlerts[i],
-      // supplierPrice removed here
-      sellPrice: sellPriceValue,
+      sellPrice: sellPrices[i],
       totalInBaseUnit: qty,
-      totalWorth: baseUnitQuantity * supplierPriceNum,
+      totalWorth: baseQty * supplierPriceNum,
       totalPotentialRevenue: revenue,
       actualRevenue: 0
     });
   }
 
-  Product.findOneAndUpdate(
-    { product, branch },
-    {
-      $set: {
+  Product.findOne({ product, branch })
+    .then(existingProduct => {
+      if (existingProduct) {
+        return next(new Error("Product name already exists for this branch."));
+      }
+
+      const newProduct = new Product({
+        product,
         category,
         product_detail,
         mfgDate,
         expDate,
+        branch,
         product_image: req.file ? req.file.filename : null,
-        supplierPrice: supplierPriceNum,  // Keep supplierPrice on product level
+        supplierPrice: supplierPriceNum,
         variants
-      }
-    },
-    { upsert: true, new: true }
-  )
-    .then((savedProduct) => {
+      });
+
+      return newProduct.save();
+    })
+    .then(savedProduct => {
+      if (!savedProduct) return;
+
       return Branch.findByIdAndUpdate(
         branch,
         { $addToSet: { stock: savedProduct._id } },
         { new: true }
       );
     })
-    .then((updatedBranch) => {
-      console.log("Branch updated with product:", updatedBranch);
-      res.redirect("/addProduct");
+    .then(updatedBranch => {
+      if (updatedBranch) {
+        res.redirect("/addProduct");
+      }
     })
-    .catch((err) => {
-      console.error("Error saving or updating product:", err);
-      res.status(500).send("Internal Server Error");
+    .catch(err => {
+      next(err);
     });
 });
+
+router.get('/api/product/:id', (req, res) => {
+  Product.findById(req.params.id)
+    .then(product => {
+      if (!product) return res.status(404).json({ message: 'Product not found' });
+      res.json(product);
+    })
+    .catch(err => res.status(500).json({ message: 'Server error', error: err.message }));
+});
+
+router.post("/adjustStock", upload.single("product_image"), (req, res) => {
+  const { productId, productName, adjustmentReason, variants: variantsRaw } = req.body;
+  let variants = [];
+
+  try {
+    variants = JSON.parse(variantsRaw || "[]");
+  } catch (e) {
+    return res.status(400).json({ error: "Invalid variants JSON" });
+  }
+
+  if (!productId) {
+    return res.status(400).json({ error: "Product ID is required" });
+  }
+
+  Product.findById(productId)
+    .then(product => {
+      if (!product) return Promise.reject({ status: 404, message: "Product not found" });
+
+      const userId = req.user ? req.user._id : null;
+      const stockLogs = [];
+
+      // Check product name change
+      if (productName && productName !== product.product) {
+        stockLogs.push({
+          productId: product._id,
+          field: "productName",
+          oldValue: product.product,
+          newValue: productName,
+          changedAt: new Date(),
+          reason: adjustmentReason || "Product name changed",
+          userId,
+        });
+        product.product = productName;
+      }
+
+      // Check image change
+      if (req.file) {
+        if (product.product_image !== req.file.filename) {
+          stockLogs.push({
+            productId: product._id,
+            field: "product_image",
+            oldValue: product.product_image,
+            newValue: req.file.filename,
+            changedAt: new Date(),
+            reason: adjustmentReason || "Product image changed",
+            userId,
+          });
+          product.product_image = req.file.filename;
+        }
+      }
+
+      const oldVariantsMap = new Map();
+      product.variants.forEach(v => oldVariantsMap.set(v.unitCode, v));
+
+      const newVariantsMap = new Map();
+      variants.forEach(v => {
+        if (v.unitCode && v.unitCode.trim() !== "") {
+          newVariantsMap.set(v.unitCode, v);
+        }
+      });
+
+      // Detect deleted variants (in old but missing in new)
+      oldVariantsMap.forEach((oldV, unitCode) => {
+        if (!newVariantsMap.has(unitCode)) {
+          stockLogs.push({
+            productId: product._id,
+            field: `variants[${unitCode}]`,
+            oldValue: oldV,
+            newValue: null,
+            changedAt: new Date(),
+            reason: adjustmentReason || `deleted ${unitCode}`,
+            userId,
+          });
+        }
+      });
+
+      // Detect new or updated variants
+      const newVariants = [];
+
+      newVariantsMap.forEach((newV, unitCode) => {
+        const oldV = oldVariantsMap.get(unitCode);
+        const isNewVariant = !oldV;
+
+        if (isNewVariant) {
+          // New variant added - log whole variant once
+          stockLogs.push({
+            productId: product._id,
+            field: `variants[${unitCode}]`,
+            oldValue: null,
+            newValue: newV,
+            changedAt: new Date(),
+            reason: adjustmentReason || "New variant added",
+            userId,
+          });
+          newVariants.push(newV);
+        } else {
+          // Existing variant - check if any field changed (shallow compare)
+          const changed = ["quantity", "lowStockAlert", "totalInBaseUnit", "supplierPrice", "sellPrice"].some(field => {
+            return oldV[field] !== newV[field];
+          });
+
+          if (changed) {
+            // Log full variant as newValue
+            stockLogs.push({
+              productId: product._id,
+              field: `variants[${unitCode}]`,
+              oldValue: oldV,
+              newValue: newV,
+              changedAt: new Date(),
+              reason: adjustmentReason || `Variant ${unitCode} updated`,
+              userId,
+            });
+          }
+          newVariants.push(newV);
+        }
+      });
+
+      product.variants = newVariants;
+
+      return product.save()
+        .then(updatedProduct => {
+          if (stockLogs.length === 0) return updatedProduct;
+          return StockLog.insertMany(stockLogs)
+            .then(() => updatedProduct);
+        });
+    })
+    .then(updatedProduct => {
+      res.json({ message: "Product updated successfully", product: updatedProduct });
+    })
+    .catch(err => {
+      if (err.status && err.message) return res.status(err.status).json({ error: err.message });
+      console.error("Error updating product:", err);
+      res.status(500).json({ error: "Internal server error" });
+    });
+});
+
+
+
+
+router.get("/stockLogs", (req, res) => {
+  if (req.isAuthenticated()) {
+    User.findById(req.user._id)
+      .populate("branch")
+      .then(user => {
+        if (!user) return res.redirect("/sign-in");
+
+        if (user.role === 'owner') {
+          Branch.findById(user.branch)
+            .then(ownerBranch => {
+              Branch.find()
+                .then(allBranches => {
+                  // === START LOGIC FOR STOCK LOGS ===
+                  const { range, productId, userId, field } = req.query;
+                  const now = new Date();
+                  let startDate;
+
+                  if (range === "day") {
+                    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                  } else if (range === "week") {
+                    startDate = new Date();
+                    startDate.setDate(startDate.getDate() - 7);
+                  } else if (range === "month") {
+                    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                  } else {
+                    startDate = new Date(0);
+                  }
+
+                  const baseFilter = {
+                    changedAt: { $gte: startDate, $lte: now },
+                    oldValue: { $ne: null },
+                    newValue: { $ne: null },
+                    $expr: { $ne: ["$oldValue", "$newValue"] }  // Ensures only true updates
+                  };
+                  if (productId) baseFilter.productId = productId;
+                  if (userId) baseFilter.userId = userId;
+                  if (field) baseFilter.field = field;
+
+                  StockLog.find(baseFilter)
+                    .populate("productId userId")
+                    .sort({ changedAt: -1 })
+                    .then(logs => {
+                      res.render("Product/stockLog", {
+                        user,
+                        ownerBranch: { branch: ownerBranch },
+                        branches: allBranches,
+                        logs,
+                        range: range || "all"
+                      });
+                    })
+                    .catch(err => {
+                      console.error("Error fetching stock logs:", err);
+                      res.redirect("/error-404");
+                    });
+                  // === END LOGIC FOR STOCK LOGS ===
+                })
+                .catch(err => {
+                  console.error("Error fetching branches:", err);
+                  res.redirect("/error-404");
+                });
+            })
+            .catch(err => {
+              console.error("Error finding owner branch:", err);
+              res.redirect("/error-404");
+            });
+        } else {
+          res.redirect("/unauthorized");
+        }
+      })
+      .catch(err => {
+        console.error("Error finding user:", err);
+        res.redirect("/error-404");
+      });
+  } else {
+    res.redirect("/sign-in");
+  }
+});
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1615,44 +1856,7 @@ router.post("/update-single-stock", (req, res) => {
 });
 
 
-router.post('/adjustStock', (req, res) => {
-  const { productId, supplierPrice, sellPrice } = req.body;
 
-  if (!productId) {
-    return res.status(400).send('Missing required fields');
-  }
-
-  Product.findById(productId)
-    .then(product => {
-      if (!product) {
-        return res.status(404).send('Product not found');
-      }
-
-      // Make sure supplierPrice and sellPrice are arrays
-      const supplierPrices = Array.isArray(supplierPrice) ? supplierPrice : [supplierPrice];
-      const sellPrices = Array.isArray(sellPrice) ? sellPrice : [sellPrice];
-
-      if (product.variants.length !== supplierPrices.length || product.variants.length !== sellPrices.length) {
-        return res.status(400).send('Mismatch in variants and prices count');
-      }
-
-      // Loop through each variant and update
-      product.variants.forEach((variant, index) => {
-        variant.supplierPrice = supplierPrices[index];
-        variant.sellPrice = sellPrices[index];
-      });
-
-      return product.save();
-    })
-    .then(updatedProduct => {
-      console.log('Product updated successfully:', updatedProduct._id);
-      res.redirect('/manageProduct');
-    })
-    .catch(error => {
-      console.error('Error updating product:', error);
-      res.status(500).send('Internal Server Error');
-    });
-});
 
 
 router.get("/deleteProduct/:id", (req,res)=>{
@@ -2138,120 +2342,109 @@ router.post("/addCustomers", (req, res) => {
 });
 
 
-router.get("/creditCustomers", (req, res) => {
+router.get("/creditCustomers", (req, res, next) => {
+  if (!req.isAuthenticated()) return res.redirect("/sign-in");
+
+  User.findById(req.user._id)
+    .populate("branch")
+    .then(user => {
+      if (!user) return res.redirect("/sign-in");
+
+      const filterCreditCustomers = (customers) => {
+        return customers.filter(customer =>
+          customer.sales_type === 'credit' &&
+          Array.isArray(customer.transactions) &&
+          customer.transactions.some(t => t.remaining_amount > 0)
+        );
+      };
+
+      if (user.role === "owner") {
+        Branch.findById(user.branch)
+          .then(ownerBranch => {
+            Branch.find()
+              .then(allBranches => {
+                Customer.find()
+                  .then(customers => {
+                    const creditCustomers = filterCreditCustomers(customers);
+                    res.render("Customers/creditCustomers", {
+                      user: user,
+                      ownerBranch: { branch: ownerBranch },
+                      branches: allBranches,
+                      customers: creditCustomers
+                    });
+                  })
+                  .catch(next);
+              })
+              .catch(next);
+          })
+          .catch(next);
+      } else {
+        Customer.find({ branch: user.branch._id })
+          .then(customers => {
+            const creditCustomers = filterCreditCustomers(customers);
+            res.render("Customers/creditCustomers", {
+              user: user,
+              ownerBranch: { branch: user.branch },
+              customers: creditCustomers
+            });
+          })
+          .catch(next);
+      }
+    })
+    .catch(next);
+});
+
+
+
+
+router.get("/paidCustomers", (req, res, next) => {
   if (req.isAuthenticated()) {
     User.findById(req.user._id)
       .populate("branch")
       .then(user => {
         if (!user) return res.redirect("/sign-in");
 
-        if (user.role === 'owner') {
-          Branch.findById(user.branch)
-            .then(ownerBranch => {
-              Branch.find()
-                .then(allBranches => {
-                  Customer.find()
-                    .then(customers => {
-                      const creditCustomers = customers.filter(customer => 
-                      customer.transactions.some(transaction => transaction.remaining_amount > 0));
-                      res.render("Customers/creditCustomers", {
-                        user: user,
-                        ownerBranch: { branch: ownerBranch },
-                        branches: allBranches,
-                        customers: creditCustomers
-                      });
-                    })
-                    .catch(err => {
-                      console.error("Error fetching categories:", err);
-                      res.redirect("/error-404");
-                    });
-                })
-            })
-            .catch(err => {
-              console.error(err);
-              res.redirect('/error-404');
+        const isOwner = user.role === 'owner';
+
+        const loadBranches = isOwner
+          ? Branch.find().then(branches => ({ allBranches: branches }))
+          : Promise.resolve({});
+
+        const loadBranchDetails = isOwner
+          ? Branch.findById(user.branch).then(ownerBranch => ({ ownerBranch }))
+          : Promise.resolve({ ownerBranch: { branch: user.branch } });
+
+        Promise.all([loadBranchDetails, loadBranches])
+          .then(([branchData, allBranchesData]) => {
+            return Customer.find().then(customers => {
+              const paidCustomers = customers.filter(customer =>
+                customer.sales_type === 'cash' &&
+                customer.transactions.length > 0 &&
+                customer.transactions.every(transaction => transaction.remaining_amount <= 0)
+              );
+
+              res.render("Customers/paidCustomers", {
+                user: user,
+                ownerBranch: branchData.ownerBranch,
+                branches: allBranchesData.allBranches || [],
+                customers: paidCustomers
+              });
             });
-        } else {
-         Customer.find()
-         .then(customers => {
-           const creditCustomers = customers.filter(customer => 
-           customer.transactions.some(transaction => transaction.remaining_amount > 0));
-          res.render("Customers/creditCustomers", {
-            user: user,
-            ownerBranch: { branch: user.branch },
-            customers: creditCustomers
+          })
+          .catch(err => {
+            console.error("Error loading branches or customers:", err);
+            next(err);
           });
-        })
-        }
       })
       .catch(err => {
-        console.error(err);
-        res.redirect("/error-404");
+        console.error("Error loading user:", err);
+        next(err);
       });
   } else {
     res.redirect("/sign-in");
   }
 });
 
-
-router.get("/paidCustomers", (req, res) => {
-  if (req.isAuthenticated()) {
-    User.findById(req.user._id)
-      .populate("branch")
-      .then(user => {
-        if (!user) return res.redirect("/sign-in");
-
-        if (user.role === 'owner') {
-          Branch.findById(user.branch)
-            .then(ownerBranch => {
-              Branch.find()
-                .then(allBranches => {
-                  Customer.find()
-                    .then(customers => {
-                            const paidCustomers = customers.filter(customer => 
-                              customer.transactions.length > 0 &&
-                              customer.transactions.every(transaction => transaction.remaining_amount <= 0)
-                            );
-                      res.render("Customers/paidCustomers", {
-                        user: user,
-                        ownerBranch: { branch: ownerBranch },
-                        branches: allBranches,
-                        customers: paidCustomers
-                      });
-                    })
-                    .catch(err => {
-                      console.error("Error fetching categories:", err);
-                      res.redirect("/error-404");
-                    });
-                })
-            })
-            .catch(err => {
-              console.error(err);
-              res.redirect('/error-404');
-            });
-        } else {
-         Customer.find()
-         .then(customers => {
-            const paidCustomers = customers.filter(customer => 
-              customer.transactions.length > 0 &&
-              customer.transactions.every(transaction => transaction.remaining_amount <= 0)
-            );
-          res.render("Customers/paidCustomers", {
-            user: user,
-            ownerBranch: { branch: user.branch },
-            customers: paidCustomers
-          });
-        })
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        res.redirect("/error-404");
-      });
-  } else {
-    res.redirect("/sign-in");
-  }
-});
 
 
 
@@ -2314,66 +2507,164 @@ router.get("/cashReceivable", (req, res) => {
 });
 
    
-router.get("/transactionHistory", (req, res) => {
-  if (req.isAuthenticated()) {
-    User.findById(req.user._id)
-      .populate("branch")
-      .then(user => {
-        if (!user) return res.redirect("/sign-in");
+router.get("/transactionHistory", (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/sign-in");
+  }
 
-        const branchId = user.branch._id || user.branch;
+  User.findById(req.user._id)
+    .populate("branch")
+    .then(user => {
+      if (!user) return res.redirect("/sign-in");
 
-        if (user.role === 'owner') {
-          Branch.findById(branchId)
-            .then(ownerBranch => {
-              Branch.find()
-                .then(allBranches => {
-                  Customer.find({ branch: branchId })  // 🔥 Filter by branch here
-                    .then(customers => {
-                      console.log("Customers:", customers);
-                      
-                      res.render("Transaction/transactionHistory", {
-                        user: user,
-                        ownerBranch: { branch: ownerBranch },
-                        branches: allBranches,
-                        customers
-                      });
-                    })
-                    .catch(err => {
-                      console.error("Error fetching customers:", err);
-                      res.redirect("/error-404");
+      const branchId = user.branch._id || user.branch;
+
+      if (user.role === 'owner') {
+        Branch.findById(branchId)
+          .then(ownerBranch => {
+            Branch.find()
+              .then(allBranches => {
+                CashReceivable.find()
+                  .populate('userId') // Uses refPath automatically
+                  .then(transactions => {
+                    res.render("Transaction/transactionHistory", {
+                      user,
+                      ownerBranch: { branch: ownerBranch },
+                      branches: allBranches,
+                      transactions
                     });
-                });
-            })
-            .catch(err => {
-              console.error(err);
-              res.redirect('/error-404');
+                  })
+                  .catch(err => next(err));
+              })
+              .catch(err => next(err));
+          })
+          .catch(err => next(err));
+      } else {
+        CashReceivable.find()
+          .populate('userId')
+          .then(transactions => {
+            res.render("Transaction/transactionHistory", {
+              user,
+              ownerBranch: { branch: user.branch },
+              transactions
             });
-        } else {
-          Customer.find({ branch: branchId })  // 🔥 Filter for normal users too
-            .then(customers => {
-              res.render("Transaction/transactionHistory", {
-                user: user,
-                ownerBranch: { branch: user.branch },
-                customers
-              });
-            });
-        }
+          })
+          .catch(err => next(err));
+      }
+    })
+    .catch(err => next(err));
+});
+
+router.post('/cashReceivable', (req, res, next) => {
+  const { selectedUserId, selectedUserType, amount, date, paymentType, reference } = req.body;
+
+  if (!selectedUserId || !selectedUserType || !amount || !date || !paymentType) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const amountPaid = Number(amount);
+
+  if (selectedUserType === 'customer') {
+    Customer.findById(selectedUserId)
+      .then(customer => {
+        if (!customer) return res.status(404).json({ error: 'Customer not found' });
+
+        const expectedAmount = customer.total_debt || 0;
+        const newRemaining = Math.max(0, expectedAmount - amountPaid);
+
+        // Add to transaction history
+        customer.transactions.push({
+          product: 'Debt Repayment',
+          qty: 0,
+          rate: 0,
+          total: expectedAmount,
+          paid_amount: amountPaid,
+          remaining_amount: newRemaining,
+          date,
+          paymentType,
+          reference
+        });
+
+        // Update customer debt fields
+        customer.total_debt = newRemaining;
+        customer.remaining_amount = newRemaining;
+
+        return customer.save().then(() => {
+          const cash = new CashReceivable({
+            transactionType: 'Customer',
+            userId: customer._id,
+            expectedAmount,
+            amountReceived: amountPaid,
+            balanceRemaining: newRemaining,
+            paymentDate: new Date(date),
+            paymentType,
+            reference
+          });
+
+          return cash.save().then(() => {
+            res.redirect('/transactionHistory');
+          });
+        });
       })
       .catch(err => {
-        console.error(err);
-        res.redirect("/error-404");
+        console.error('Customer repayment error:', err);
+        next(err);
       });
+
+  } else if (selectedUserType === 'loan') {
+    Loan.findById(selectedUserId)
+      .then(loaner => {
+        if (!loaner) return res.status(404).json({ error: 'Loaner not found' });
+
+        const totalExpected = loaner.loans.reduce((sum, loan) => sum + loan.amount_to_repay, 0);
+        const newRemaining = Math.max(0, totalExpected - amountPaid);
+
+        if (loaner.loans.length > 0) {
+          loaner.loans[0].amount_to_repay = newRemaining;
+        }
+
+        return loaner.save().then(() => {
+          const cash = new CashReceivable({
+            transactionType: 'Loan',
+            userId: loaner._id,
+            expectedAmount: totalExpected,
+            amountReceived: amountPaid,
+            balanceRemaining: newRemaining,
+            paymentDate: new Date(date),
+            paymentType,
+            reference
+          });
+
+          return cash.save().then(() => {
+            res.redirect('/transactionHistory');
+          });
+        });
+      })
+      .catch(err => {
+        console.error('Loaner repayment error:', err);
+        next(err);
+      });
+
   } else {
-    res.redirect("/sign-in");
+    return res.status(400).json({ error: 'Invalid user type' });
   }
- 
+});
+
+
+router.get("/deletetransactionHistory/:id", (req,res)=>{
+  CashReceivable.findByIdAndDelete(req.params.id)
+  .then(user =>{
+      res.redirect("/transactionHistory")
+      
+  })
+  .catch(err => console.log(err))
+  
 });
 
 
 
 // ADD CUSTOMER INVOICE LOGIC 
-router.get("/addInvoice", (req, res) => {
+router.get("/addInvoice", (req, res, next) => {
   if (req.isAuthenticated()) {
     User.findById(req.user._id)
       .populate("branch")
@@ -2382,71 +2673,53 @@ router.get("/addInvoice", (req, res) => {
 
         const branchId = user.branch._id || user.branch;
 
-        if (user.role === 'owner') {
-          Branch.findById(branchId)
-            .then(ownerBranch => {
-              Branch.find()
-                .then(allBranches => {
-                  // Fetch customers for the branch
-                  Customer.find({ branch: branchId }).sort({ createdAt: -1 })
-                    .then(customers => {
-                      // Fetch products for the branch
-                      Product.find({ branch: branchId }).sort({ createdAt: -1 })
-                        .then(products => {
-                          res.render("Invoice/addInvoice", {
-                            user: user,
-                            ownerBranch: { branch: ownerBranch },
-                            branches: allBranches,
-                            customers: customers,
-                            products: products
-                          });
-                        })
-                        .catch(err => {
-                          console.error("Error fetching products:", err);
-                          res.redirect("/error-404");
-                        });
-                    })
-                    .catch(err => {
-                      console.error("Error fetching customers:", err);
-                      res.redirect("/error-404");
-                    });
-                })
-                .catch(err => {
-                  console.error("Error fetching branches:", err);
-                  res.redirect("/error-404");
-                });
-            })
-            .catch(err => {
-              console.error("Error fetching owner branch:", err);
-              res.redirect("/error-404");
-            });
-        } else {
-          // For non-owner users, fetch customers and products for their branch
+        const fetchCustomersAndProducts = (ownerBranch, allBranches) => {
           Customer.find({ branch: branchId }).sort({ createdAt: -1 })
             .then(customers => {
               Product.find({ branch: branchId }).sort({ createdAt: -1 })
                 .then(products => {
                   res.render("Invoice/addInvoice", {
                     user: user,
-                    ownerBranch: { branch: user.branch },
+                    ownerBranch: { branch: ownerBranch },
+                    branches: allBranches || [],
                     customers: customers,
                     products: products
                   });
                 })
                 .catch(err => {
                   console.error("Error fetching products:", err);
-                  res.redirect("/error-404");
+                  next(err);
                 });
             })
             .catch(err => {
               console.error("Error fetching customers:", err);
-              res.redirect("/error-404");
+              next(err);
             });
+        };
+
+        if (user.role === 'owner') {
+          Branch.findById(branchId)
+            .then(ownerBranch => {
+              Branch.find()
+                .then(allBranches => {
+                  fetchCustomersAndProducts(ownerBranch, allBranches);
+                })
+                .catch(err => {
+                  console.error("Error fetching branches:", err);
+                  next(err);
+                });
+            })
+            .catch(err => {
+              console.error("Error fetching owner branch:", err);
+              next(err);
+            });
+        } else {
+          fetchCustomersAndProducts(user.branch);
         }
       })
       .catch(err => {
         console.error("Error fetching user:", err);
-        res.redirect("/error-404");
+        next(err);
       });
   } else {
     res.redirect("/sign-in");
@@ -2455,10 +2728,15 @@ router.get("/addInvoice", (req, res) => {
 
 
 
-router.post("/addInvoice", (req, res) => {
+
+router.post("/addInvoice", (req, res, next) => {
   let {
     customer_id,
     customer_name,
+    mobile,
+    email,
+    address,
+    credit_limit,
     payment_date,
     sales_type,
     discount = 0,
@@ -2472,7 +2750,6 @@ router.post("/addInvoice", (req, res) => {
     paid_amount
   } = req.body;
 
-  // Normalize inputs to arrays
   if (!Array.isArray(product)) product = [product];
   if (!Array.isArray(qty)) qty = [qty];
   if (!Array.isArray(unitcode)) unitcode = [unitcode];
@@ -2480,35 +2757,54 @@ router.post("/addInvoice", (req, res) => {
   if (!Array.isArray(total)) total = [total];
 
   const len = product.length;
-
   if (
     qty.length !== len ||
     unitcode.length !== len ||
     rate.length !== len ||
     total.length !== len
   ) {
-    return res.status(400).json({ message: 'Product detail arrays must have the same length' });
+    return next({ status: 400, message: 'Product detail arrays must have the same length' });
   }
 
   const branchId = req.user.branch;
   if (!branchId) {
-    return res.status(400).json({ message: 'Branch ID not found on user' });
+    return next({ status: 400, message: 'Branch ID not found on user' });
   }
 
   const grandTotalNum = Number(grand_total);
   const paidAmountNum = Number(paid_amount);
   const remainingAmount = grandTotalNum - paidAmountNum;
 
-  const invoice_no = `INV-${Date.now()}`;
   const items = [];
-
   let branchDoc;
+  let generatedInvoiceNo;
+  let savedInvoice;
 
   Branch.findById(branchId)
     .then(branch => {
       if (!branch) throw { status: 404, message: 'Branch not found' };
       branchDoc = branch;
 
+      const prefix = branch.branch_name.toUpperCase().slice(0, 3);
+      const branchPrefix = `INV-${prefix}-`;
+
+      return Invoice.find({ invoice_no: { $regex: `^${branchPrefix}` } })
+        .sort({ createdAt: -1 })
+        .limit(1)
+        .then(([latest]) => {
+          let nextNum = 1;
+          if (latest && latest.invoice_no) {
+            const match = latest.invoice_no.match(/\d+$/);
+            if (match) {
+              nextNum = parseInt(match[0], 10) + 1;
+            }
+          }
+
+          const paddedNum = String(nextNum).padStart(3, '0');
+          generatedInvoiceNo = `INV-${prefix}-${paddedNum}`;
+        });
+    })
+    .then(() => {
       let promiseChain = Promise.resolve();
 
       for (let i = 0; i < len; i++) {
@@ -2518,43 +2814,30 @@ router.post("/addInvoice", (req, res) => {
           const unitCode = unitcode[i];
           const itemRate = Number(rate[i]);
           const itemTotal = Number(total[i]);
-
-          // Round soldQty to nearest 0.5
           const soldQty = Math.round(soldQtyRaw * 2) / 2;
 
           return Product.findOne({ product: productName }).then(productDoc => {
             if (!productDoc) throw { status: 404, message: `Product not found: ${productName}` };
 
             const sellingVariant = productDoc.variants.find(v => v.unitCode === unitCode);
-            const baseVariant = productDoc.variants.find(v => v.unitCode === 'ctns');
+            if (!sellingVariant) throw { status: 400, message: `Unit variant not found for: ${productName}` };
 
-            if (!sellingVariant || !baseVariant) {
-              throw { status: 400, message: `Variants missing for product: ${productName}` };
+            const firstVariant = productDoc.variants[0];
+            const baseEquivalent = soldQty / (sellingVariant.totalInBaseUnit || 1);
+
+            if (baseEquivalent > firstVariant.quantity) {
+              throw {
+                status: 400,
+                message: `Insufficient stock for ${productName} in ${unitCode}.`
+              };
             }
 
-            // Check stock for selling variant
-            if (sellingVariant.quantity < soldQty) {
-              throw { status: 400, message: `Insufficient stock for product: ${productName} unit: ${unitCode}` };
-            }
-            sellingVariant.quantity -= soldQty;
-
-            // Deduct base variant according to conversion if unitCode != base variant
-            if (unitCode !== 'ctns') {
-              const totalInBaseUnit = sellingVariant.totalInBaseUnit || 1; // e.g. 3 rolls per ctn
-              let baseUnitsToDeduct = soldQty / totalInBaseUnit;
-              baseUnitsToDeduct = Math.round(baseUnitsToDeduct * 2) / 2;
-
-              if (baseVariant.quantity < baseUnitsToDeduct) {
-                throw { status: 400, message: `Insufficient stock for product: ${productName} base unit (ctns)` };
-              }
-              baseVariant.quantity -= baseUnitsToDeduct;
-            } else {
-              // Selling base variant itself (carton)
-              if (baseVariant.quantity < soldQty) {
-                throw { status: 400, message: `Insufficient stock for product: ${productName} base unit (ctns)` };
-              }
-              baseVariant.quantity -= soldQty;
-            }
+            firstVariant.quantity -= baseEquivalent;
+            productDoc.variants.forEach((variant, idx) => {
+              if (idx === 0) return;
+              const factor = variant.totalInBaseUnit || 1;
+              variant.quantity = firstVariant.quantity * factor;
+            });
 
             items.push({
               product: productDoc._id,
@@ -2573,10 +2856,53 @@ router.post("/addInvoice", (req, res) => {
       return promiseChain;
     })
     .then(() => {
+      if (customer_id) {
+        return Customer.findById(customer_id).then(customer => {
+          if (!customer) throw { status: 404, message: 'Customer not found with provided ID' };
+
+          if (sales_type === 'credit') {
+            if ((customer.credit_limit || 0) < remainingAmount) {
+              throw { status: 400, message: 'Insufficient credit limit to proceed with credit sale' };
+            }
+            customer.credit_limit -= remainingAmount;
+            customer.total_debt += remainingAmount;
+            customer.remaining_amount += remainingAmount;
+            customer.credit_sales_count += 1;
+          } else {
+            if (grandTotalNum >= customer.total_debt) {
+              customer.credit_limit += customer.total_debt;
+              customer.total_debt = 0;
+              customer.remaining_amount = 0;
+            }
+            customer.cash_sales_count += 1;
+          }
+
+          customer.sales_type = sales_type;
+          return customer.save();
+        });
+      } else {
+        const newCustomer = new Customer({
+          customer_name,
+          mobile,
+          email,
+          address,
+          branch: branchId,
+          credit_limit: credit_limit || 0,
+          total_debt: sales_type === 'credit' ? remainingAmount : 0,
+          remaining_amount: sales_type === 'credit' ? remainingAmount : 0,
+          sales_type,
+          cash_sales_count: sales_type === 'cash' ? 1 : 0,
+          credit_sales_count: sales_type === 'credit' ? 1 : 0
+        });
+
+        return newCustomer.save();
+      }
+    })
+    .then(customer => {
       const newInvoice = new Invoice({
-        invoice_no,
-        customer_id,
-        customer_name,
+        invoice_no: generatedInvoiceNo,
+        customer_id: customer._id,
+        customer_name: customer.customer_name,
         payment_date,
         sales_type,
         discount: Number(discount),
@@ -2585,33 +2911,27 @@ router.post("/addInvoice", (req, res) => {
         remaining_amount: remainingAmount,
         payment_type,
         grand_total: grandTotalNum,
-        branch: branchId
+        branch: branchId,
+        createdBy: req.user._id
       });
 
-      return newInvoice.save();
-    })
-    .then(() => Customer.findById(customer_id))
-    .then(customer => {
-      if (!customer) throw { status: 404, message: 'Customer not found' };
+      return newInvoice.save().then(inv => {
+        savedInvoice = inv;
 
-      items.forEach(item => {
-        customer.transactions.push({
-          product: item.product_name,
-          qty: item.qty,
-          unit_code: item.unitcode,
-          rate: item.rate,
-          total: item.total,
-          paid_amount: item.total,
-          remaining_amount: 0
+        items.forEach(item => {
+          customer.transactions.push({
+            product: item.product_name,
+            qty: item.qty,
+            unit_code: item.unitcode,
+            rate: item.rate,
+            total: item.total,
+            paid_amount: item.total,
+            remaining_amount: 0
+          });
         });
+
+        return customer.save();
       });
-
-     
-      if (sales_type === 'cash') {
-        customer.total_debt = 0;
-      }
-
-      return customer.save();
     })
     .then(() => {
       if (sales_type === 'credit') {
@@ -2622,21 +2942,68 @@ router.post("/addInvoice", (req, res) => {
       }
 
       branchDoc.totalSales = branchDoc.totalCashSalesAmount + branchDoc.totalCreditSales;
-
       return branchDoc.save();
     })
     .then(() => {
-      res.redirect('/manageInvoice');
+      res.redirect(`/receipt/${savedInvoice._id}`);
     })
     .catch(err => {
       console.error('AddInvoice error:', err);
-      if (err.status && err.message) {
-        return res.status(err.status).json({ message: err.message });
-      }
-      res.status(500).json({ message: 'Internal server error' });
+      next(err);
     });
 });
 
+
+
+
+// GET /receipt/:invoiceId
+router.get('/receipt/:invoiceId', async (req, res, next) => {
+  try {
+    const invoice = await Invoice.findById(req.params.invoiceId)
+      .populate('branch')
+      .populate('createdBy');
+
+    if (!invoice) {
+      return res.status(404).send('Invoice not found');
+    }
+
+    const branch = invoice.branch;
+    const isHeadOffice = branch?.isHeadOffice;
+    const creator = invoice.createdBy;
+
+    const totalInWords = numberToWords.toWords(invoice.grand_total)
+      .replace(/\b\w/g, l => l.toUpperCase());
+
+    let headOffice = null;
+
+    // ✅ Only find head office if current branch is NOT head office
+    if (!isHeadOffice) {
+      headOffice = await Branch.findOne({ isHeadOffice: true });
+    }
+
+    res.render('Invoice/receipt', {
+      invoice,
+      branch,
+      creator,
+      isHeadOffice,
+      headOffice,
+      totalInWords
+    });
+
+  } catch (err) {
+    console.error('Error loading receipt:', err);
+    next(err);
+  }
+});
+
+
+
+
+
+
+router.get("/print-receipt", (req, res) => {
+  res.render("Invoice/receipt")
+});
 
 
 
@@ -4384,12 +4751,133 @@ router.get("/addStaffs", (req, res) => {
   }
 });
 
-router.post("/addStaffs", (req, res) => {
-  console.log(req.body);
+
+
+router.get("/manageStaffs", (req, res, next) => {
+  if (!req.isAuthenticated()) return res.redirect("/sign-in");
+
+  User.findById(req.user._id).populate("branch")
+    .then(user => {
+      if (!user) return res.redirect("/sign-in");
+
+      // Get staff and admin users
+      User.find({ role: { $in: ["staff", "admin"] } })
+        .populate("branch")
+        .then(staffUsers => {
+          // If user is owner, fetch all branches (for dropdown in header)
+          if (user.role === "owner") {
+            Branch.find()
+              .then(branches => {
+                res.render("staffs/manageStaffs", {
+                  user,
+                  staffUsers,
+                  branches
+                });
+              })
+              .catch(err => {
+                console.error("Error loading branches:", err);
+                next(err);
+              });
+          } else {
+            // Admins/staff won't see all branches
+            res.render("staffs/manageStaffs", {
+              user,
+              staffUsers,
+              branches: []
+            });
+          }
+        })
+        .catch(err => {
+          console.error("Error loading staff users:", err);
+          next(err);
+        });
+    })
+    .catch(err => {
+      console.error("Error fetching logged-in user:", err);
+      next(err);
+    });
 });
 
-router.get("/staffs/manageStaffs", (req, res) => {
-  res.render("staffs/manageStaffs", {});
+router.post('/updateStaff', (req, res, next) => {
+  const { userId, fullname, username, role, branch } = req.body;
+
+  User.findById(userId)
+    .then(user => {
+      if (!user) {
+        const error = new Error('User not found');
+        error.status = 404;
+        return next(error);
+      }
+
+      user.fullname = fullname;
+      user.username = username;
+      user.role = role;
+      user.branch = branch;
+
+      return user.save();
+    })
+    .then(() => {
+      res.redirect('/manageStaffs');
+    })
+    .catch(err => next(err));
+});
+
+
+
+
+router.post("/addStaffs", (req, res, next) => {
+   console.log("Received body:", req.body); 
+  const { fullname, username, password, role, branch } = req.body;
+
+  if (!fullname || !username || !password || !branch || !role) {
+  return res.render("staff/add", { error: "All fields are required." });
+}
+
+
+  User.findOne({ username })
+    .then(existingUser => {
+      if (existingUser) {
+        return res.render("staff/add", { error: "Username already exists." });
+      }
+
+      bcrypt.hash(password, saltRounds)
+        .then(hashedPassword => {
+          const newUser = new User({
+            fullname,
+            username,
+            password: hashedPassword,
+            role: role.toLowerCase(), // "staff" or "admin"
+            branch
+          });
+
+          newUser.save()
+            .then(savedUser => {
+              // Add the user to the branch's assignedUsers
+              Branch.findByIdAndUpdate(
+                branch,
+                { $addToSet: { assignedUsers: savedUser._id } },
+                { new: true }
+              ).then(() => {
+                res.redirect("/staffs?success=Staff added successfully");
+              }).catch(err => {
+                console.error("Error updating branch:", err);
+                next(err);
+              });
+            })
+            .catch(err => {
+              console.error("Error saving staff user:", err);
+              next(err);
+            });
+        })
+        .catch(err => {
+          console.error("Error hashing password:", err);
+          next(err);
+        });
+    })
+    .catch(err => {
+      console.error("Error checking username:", err);
+      next(err);
+    });
 });
 
 
@@ -4445,18 +4933,64 @@ router.get("/Settings/signOut", (req, res) => {
 
 
 
-router.get("/error-404", (req, res) => {
-  res.render("error-404", { user: req.user });
-});
+// router.get("/error-404", (req, res) => {
+//   res.render("Auth/error", { user: req.user });
+// });
 
-router.get('/logout', (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      return res.redirect('/error');
-    }
-    res.redirect('/sign-in');
+
+
+
+router.get('/logout', (req, res, next) => {
+  const staffLogId = req.session.staffLogId;
+  if (staffLogId) {
+    StaffLog.findByIdAndUpdate(staffLogId, { signOutTime: new Date() })
+      .catch(err => console.error('Error logging sign-out time:', err));
+  }
+
+  req.logout(err => {
+    if (err) return next(err);
+    req.session.destroy(() => {
+      res.redirect('/sign-in');
+    });
   });
 });
+
+router.get('/staffLogs', function (req, res, next) {
+  if (!req.user || req.user.role.toLowerCase() !== 'owner') {
+    return res.status(403).send('Access denied');
+  }
+
+  const branchId = req.query.branch || null;
+
+  let query = {};
+  if (branchId && branchId !== '') {
+    query.branch = branchId;
+  }
+
+  StaffLog.find(query)
+    .populate('user', 'fullname username role')
+    .sort({ signInTime: -1 })
+    .exec()
+    .then(logs => {
+      return Branch.find({}).exec()
+        .then(branches => {
+          res.render('staffs/staffLogs', {
+            user: req.user,
+            logs: logs,
+            branches: branches,
+            selectedBranch: branchId,
+          });
+        });
+    })
+    .catch(err => next(err));
+});
+
+
+
+
+
+
+
 
 
 // USER SIGN-UP LOGIC 
@@ -4475,23 +5009,22 @@ router.get("/register", (req,res)=>{
 
 
 
-router.post("/register", (req, res) => {
-  const { username, password, role, branch_name, branch_address } = req.body;
+router.post("/register", (req, res, next) => {
+  const { fullname, username, password, role, branch_name, branch_address, branch_phone } = req.body;
 
   User.findOne({ username: username })
     .then(existingUser => {
       if (existingUser) {
-        return res.render("auth/auth-login", {
+        return res.render("Auth/auth-login", {
           error: "Username already exists. Please login.",
           existingUser
         });
       }
 
-      // Hash the password
       bcrypt.hash(password, saltRounds)
         .then(hashedPassword => {
-          // Create user (without branch ref yet)
           const newUser = new User({
+            fullname,
             username,
             password: hashedPassword,
             role: role || 'staff'
@@ -4499,66 +5032,134 @@ router.post("/register", (req, res) => {
 
           newUser.save()
             .then(savedUser => {
-              // Create branch and reference the user
-              const newBranch = new Branch({
-                branch_name,
-                branch_address,
-                createdBy: savedUser._id
-              });
+              if (role === 'owner') {
+                Branch.findOne({ isHeadOffice: true })
+                  .then(existingHeadOffice => {
+                    const isHeadOffice = !existingHeadOffice;
 
-              newBranch.save()
-                .then(savedBranch => {
-                  // Link branch back to user
-                  savedUser.branch = savedBranch._id;
-                  savedUser.save()
-                    .then(() => res.redirect("/sign-in"))
-                    .catch(err => {
-                      console.error("Error saving user with branch ref:", err);
-                      res.redirect("/error-404");
+                    const newBranch = new Branch({
+                      branch_name,
+                      branch_address,
+                      branch_phone,
+                      createdBy: savedUser._id,
+                      isHeadOffice,
+                      assignedUsers: [savedUser._id]
                     });
-                })
-                .catch(err => {
-                  console.error("Error creating branch:", err);
-                  res.redirect("/error-404");
+
+                    newBranch.save()
+                      .then(savedBranch => {
+                        savedUser.branch = savedBranch._id;
+                        savedUser.save()
+                          .then(() => res.redirect("/sign-in"))
+                          .catch(err => {
+                            console.error("Error saving user with branch ref:", err);
+                            next(err);
+                          });
+                      })
+                      .catch(err => {
+                        console.error("Error creating branch:", err);
+                        next(err);
+                      });
+                  })
+                  .catch(err => {
+                    console.error("Error checking head office:", err);
+                    next(err);
+                  });
+              } else {
+                const newBranch = new Branch({
+                  branch_name,
+                  branch_address,
+                  branch_phone,
+                  createdBy: savedUser._id,
+                  assignedUsers: [savedUser._id]
                 });
+
+                newBranch.save()
+                  .then(savedBranch => {
+                    savedUser.branch = savedBranch._id;
+                    savedUser.save()
+                      .then(() => res.redirect("/sign-in"))
+                      .catch(err => {
+                        console.error("Error saving user with branch ref:", err);
+                        next(err);
+                      });
+                  })
+                  .catch(err => {
+                    console.error("Error creating branch:", err);
+                    next(err);
+                  });
+              }
             })
             .catch(err => {
               console.error("Error saving user:", err);
-              res.redirect("/error-404");
+              next(err);
             });
         })
         .catch(err => {
           console.error("Error hashing password:", err);
-          res.redirect("/error-404");
+          next(err);
         });
     })
     .catch(err => {
       console.error("Error checking existing user:", err);
-      res.redirect("/error-404");
+      next(err);
     });
 });
 
-router.post("/sign-in", passport.authenticate('local', {
-    successRedirect: "/dashboard",
-    failureRedirect: "/sign-in"
-}));
+
+
+router.post("/sign-in", function (req, res, next) {
+  passport.authenticate("local", function (err, user, info) {
+    if (err) return next(err);
+
+    if (!user) {
+      if (info.message === "User not found") {
+        return res.redirect("/register");
+      } else if (info.message === "Incorrect password") {
+        return res.redirect("/sign-in?error=Incorrect%20password");
+      } else {
+        return res.redirect("/sign-in?error=Authentication%20failed");
+      }
+    }
+
+    req.logIn(user, function (err) {
+      if (err) return next(err);
+
+      StaffLog.create({
+        user: user._id,
+        role: user.role,
+        signInTime: new Date()
+      })
+        .then((log) => {
+          req.session.staffLogId = log._id;
+          return res.redirect("/dashboard");
+        })
+        .catch((logErr) => {
+          console.error("Failed to create staff log:", logErr);
+          return res.redirect("/dashboard"); // proceed even if log fails
+        });
+    });
+  })(req, res, next);
+});
+
 
 
 passport.use(new LocalStrategy(function verify(username, password, done) {
-    User.findOne({username: username}).then(function (foundUser) {
-        if(foundUser){
-            bcrypt.compare(password, foundUser.password, function(err, result) {
-                if(result){
-                    return done(null, foundUser);
-                }else{
-                    return done(null, false, {message: "Incorrect password"});
-                    alert("Incorrect password");
-                }
-            });
-            
+    User.findOne({ username: username }).then(function (foundUser) {
+        if (!foundUser) {
+            return done(null, false, { message: "User not found" });
         }
-    });
-}))
+
+        bcrypt.compare(password, foundUser.password, function (err, result) {
+            if (err) return done(err);
+            if (result) {
+                return done(null, foundUser);
+            } else {
+                return done(null, false, { message: "Incorrect password" });
+            }
+        });
+    }).catch(err => done(err));
+}));
 
 passport.serializeUser((user, done) =>{
     done(null, user);

@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const branchSchema = new mongoose.Schema({
   branch_name: { type: String, required: true },
   branch_address: { type: String, required: true },
+  branch_phone: { type: String, required: true },
+  isHeadOffice: {
+    type: Boolean,
+    default: false
+  },
 
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

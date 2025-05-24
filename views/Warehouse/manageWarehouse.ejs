@@ -1,0 +1,233 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen bg-slate-200">
+      <%- include ('../partials/header') %>
+
+      <div class="flex flex-row">
+        <div class="lg:w-[220px] lg:p-4">
+          <%- include ('../partials/sidebar') %>
+        </div>
+        <main
+          class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200">
+          <h2 class="text-2xl font-semibold text-gray-800">warehouse List</h2>
+          <div class="max-w-6xl mx-auto mt-6">
+            <!-- Card -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <!-- Table Header -->
+              <div
+                class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <div>
+                  <h2 class="text-2xl font-semibold text-gray-800">
+                    Exporting warehouse
+                  </h2>
+                </div>
+              </div>
+
+              <!-- Branch Table View -->
+              <div
+                id="branchTableView"
+                class="w-full overflow-x-auto transition-all">
+                <h2 class="text-xl font-bold text-gray-700 mb-4">
+                  Branch List
+                </h2>
+                <table
+                  class="min-w-full text-sm text-left bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <thead class="bg-gray-100 text-gray-700">
+                    <tr>
+                      <th class="p-3">No</th>
+                      <th class="p-3 border border-gray-200">Branch</th>
+                      <th class="p-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="text-gray-700 divide-y divide-gray-100">
+                    <% branch.forEach((branch, index) => { %>
+                      <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 border border-gray-200"><%= index + 1 %></td>
+                        <td class="p-3 border border-gray-200"><%= branch.branch_name %></td>
+                        <td class="p-3 flex space-x-2 border border-gray-200">
+                          <button
+                            onclick="viewBranch('Apapa')"
+                            class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs hover:bg-blue-200">
+                            👁 View
+                          </button>
+                          <button
+                            onclick="editBranch('Apapa')"
+                            class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs hover:bg-yellow-200">
+                            ✏ Edit
+                          </button>
+                          <a href="/deleteBranch/<%= branch._id %>"
+                            onclick="deleteBranch(this)"
+                            class="bg-red-500 text-white px-2 py-1 rounded-md">
+                            <i class="fa-solid fa-trash"></i>
+                        </a>
+                        </td>
+                      </tr>
+                    <% }) %>  
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Branch Detail View -->
+              <div
+                id="branchDetailView"
+                class="hidden transition-all">
+                <button
+                  onclick="goBack()"
+                  class="text-sm text-blue-600 hover:underline mb-4 flex items-center space-x-1">
+                  <span>← Back to Branches</span>
+                </button>
+                <h2 class="text-xl font-bold text-gray-800 mb-6">
+                  Branch: <span id="branchName"></span>
+                </h2>
+
+                <!-- 🔍 Search Bar -->
+                <div class="w-full max-w-5xl mx-auto mb-6">
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring focus:ring-blue-200" />
+                </div>
+
+                <!-- 📊 Summary Boxes Row 1 -->
+                <div
+                  class="grid grid-cols-1 py-10 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+                  <div
+                    class="bg-white border-l-4 border-blue-500 rounded-lg shadow p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-blue-100 rounded-full">
+                      <i
+                        data-feather="users"
+                        class="text-blue-500"></i>
+                    </div>
+                    <div>
+                      <p class="text-gray-600 text-sm">Customers</p>
+                      <p class="text-2xl font-bold text-blue-600">1,200</p>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white border-l-4 border-green-500 rounded-lg shadow p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-green-100 rounded-full">
+                      <i
+                        data-feather="box"
+                        class="text-green-500"></i>
+                    </div>
+                    <div>
+                      <p class="text-gray-600 text-sm">Products</p>
+                      <p class="text-2xl font-bold text-green-600">350</p>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white border-l-4 border-yellow-500 rounded-lg shadow p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-yellow-100 rounded-full">
+                      <i
+                        data-feather="shopping-cart"
+                        class="text-yellow-500"></i>
+                    </div>
+                    <div>
+                      <p class="text-gray-600 text-sm">Recent Sales</p>
+                      <p class="text-2xl font-bold text-yellow-600">75</p>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white border-l-4 border-purple-500 rounded-lg shadow p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-purple-100 rounded-full">
+                      <i
+                        data-feather="file-text"
+                        class="text-purple-500"></i>
+                    </div>
+                    <div>
+                      <p class="text-gray-600 text-sm">Invoices</p>
+                      <p class="text-2xl font-bold text-purple-600">1,050</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 📦 Summary Boxes Row 2 -->
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+                  <div
+                    class="bg-white border-l-4 border-indigo-500 rounded-lg shadow p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-indigo-100 rounded-full">
+                      <i
+                        data-feather="dollar-sign"
+                        class="text-indigo-500"></i>
+                    </div>
+                    <div>
+                      <p class="text-gray-600 text-sm">Revenue</p>
+                      <p class="text-2xl font-bold text-indigo-600">₦5M</p>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white border-l-4 border-red-500 rounded-lg shadow p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-red-100 rounded-full">
+                      <i
+                        data-feather="credit-card"
+                        class="text-red-500"></i>
+                    </div>
+                    <div>
+                      <p class="text-gray-600 text-sm">Expenses</p>
+                      <p class="text-2xl font-bold text-red-600">₦3M</p>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white border-l-4 border-pink-500 rounded-lg shadow p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-pink-100 rounded-full">
+                      <i
+                        data-feather="trending-up"
+                        class="text-pink-500"></i>
+                    </div>
+                    <div>
+                      <p class="text-gray-600 text-sm">Profit</p>
+                      <p class="text-2xl font-bold text-pink-600">₦2M</p>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white border-l-4 border-teal-500 rounded-lg shadow p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-teal-100 rounded-full">
+                      <i
+                        data-feather="bell"
+                        class="text-teal-500"></i>
+                    </div>
+                    <div>
+                      <p class="text-gray-600 text-sm">Alerts</p>
+                      <p class="text-2xl font-bold text-teal-600">3 New</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <%- include ('../partials/footer') %>
+        </main>
+      </div>
+    </div>
+    <script>
+      feather.replace();
+      function viewBranch(name) {
+        document.getElementById("branchTableView").classList.add("hidden");
+        document.getElementById("branchDetailView").classList.remove("hidden");
+        document.getElementById("branchName").innerText = name;
+        document.getElementById("branchItemsName").innerText = name;
+      }
+
+      function goBack() {
+        document.getElementById("branchDetailView").classList.add("hidden");
+        document.getElementById("branchTableView").classList.remove("hidden");
+      }
+
+      function editBranch(name) {
+        alert(`Edit branch: ${name}`);
+      }
+
+      function deleteBranch(button) {
+        if (confirm("Are you sure you want to delete this branch?")) {
+          const row = button.closest("tr");
+          row.remove();
+        }
+      }
+    </script>
+  </body>
+</html>

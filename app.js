@@ -61,3 +61,17 @@ app.post("/addExpensesInvoice", (req, res) => {
 
 
 app.use(require("./route/auth"));
+
+app.use((err, req, res, next) => {
+  const backUrl = req.get('Referer') || '/';
+
+  res.status(err.status || 500).render('Auth/error', {
+    error: {
+      status: err.status || 500,
+      message: err.message || "Internal Server Error",
+      stack: process.env.NODE_ENV === 'production' ? null : err.stack
+    },
+    backUrl
+  });
+});
+

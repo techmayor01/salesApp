@@ -300,16 +300,13 @@
               productInput.value = product.product;
               selectedProduct = product;
 
-              const availableQty = product.variants[product.variants.length - 1]?.quantity ?? 0;
-
-              // Use first variant for default unitCode and rate
               const firstVariant = product.variants[0];
+              const availableQty = firstVariant?.quantity ?? 0;
               const initialUnitCode = firstVariant?.unitCode || "";
               const initialRate = firstVariant?.sellPrice || 0;
 
               row.querySelector("td:nth-child(2) input").value = availableQty;
 
-              // Populate unitCode select options
               unitCodeSelect.innerHTML = "";
               product.variants.forEach(variant => {
                 const option = document.createElement("option");
@@ -318,10 +315,7 @@
                 unitCodeSelect.appendChild(option);
               });
 
-              // Automatically select the first variant's unitCode
               unitCodeSelect.value = initialUnitCode;
-
-              // Set rate and total based on first variant
               rateInput.value = initialRate;
               totalInput.value = (initialRate * 1).toFixed(2);
 
@@ -347,6 +341,7 @@
           const variant = selectedProduct.variants.find(v => v.unitCode === unitCodeSelect.value);
           if (variant) {
             rateInput.value = variant.sellPrice;
+            row.querySelector("td:nth-child(2) input").value = variant.quantity ?? 0;
             updateTotal();
           }
         }
@@ -413,49 +408,56 @@
     function updateGrandTotal() {
       let subtotal = 0;
 
-      // Sum all item totals (subtotal)
       document.querySelectorAll("tr.text-sm").forEach(row => {
         const totalInput = row.querySelector("td:nth-child(6) input");
         if (totalInput) subtotal += parseFloat(totalInput.value) || 0;
       });
 
-      // Get discount from input
       const discountInput = document.querySelector("input[name='discount']");
       const discount = parseFloat(discountInput?.value) || 0;
 
-      // Get remaining amount from p tag
       const remainingText = document.getElementById("remainingAmount")?.innerText || "0";
       const remainingAmount = parseFloat(remainingText.replace(/[^\d.-]/g, "")) || 0;
 
-      // Final total = subtotal - discount + customer balance
       const finalTotal = subtotal - discount + remainingAmount;
 
-      // Update grand total input
       const grandTotalInput = document.querySelector("input[name='grand_total']");
       if (grandTotalInput) grandTotalInput.value = finalTotal.toFixed(2);
 
-      // Update paid amount input to match grand total
+      const salesType = document.querySelector("select[name='sales_type']")?.value;
       const paidAmountInput = document.querySelector("input[name='paid_amount']");
-      if (paidAmountInput) paidAmountInput.value = finalTotal.toFixed(2);
 
-      // Update the breakdown display
+      if (salesType === "cash") {
+        paidAmountInput.value = finalTotal.toFixed(2);
+        paidAmountInput.setAttribute("readonly", true);
+        document.getElementById("balanceDisplay").textContent = "0.00";
+      } else {
+        paidAmountInput.removeAttribute("readonly");
+        const paid = parseFloat(paidAmountInput.value) || 0;
+        const balance = finalTotal - paid;
+        document.getElementById("balanceDisplay").textContent = balance.toFixed(2);
+      }
+
       document.getElementById("subtotalDisplay").textContent = subtotal.toFixed(2);
       document.getElementById("discountDisplay").textContent = discount.toFixed(2);
-      document.getElementById("balanceDisplay").textContent = remainingAmount.toFixed(2);
+      document.getElementById("balanceDisplay").textContent = (finalTotal - parseFloat(paidAmountInput.value || 0)).toFixed(2);
       document.getElementById("finalTotalDisplay").textContent = finalTotal.toFixed(2);
     }
 
-    // Update totals on discount change
     document.querySelector("input[name='discount']")?.addEventListener("input", updateGrandTotal);
+    document.querySelector("input[name='paid_amount']")?.addEventListener("input", updateGrandTotal);
+    document.querySelector("select[name='sales_type']")?.addEventListener("change", updateGrandTotal);
 
-    // Initialize with first row
     const firstRow = tbody.querySelector("tr.text-sm:not(:has(td[colspan]))");
     bindRowEvents(firstRow);
 
-    // Initial grand total update
     updateGrandTotal();
   });
 </script>
+
+
+
+
 
 
 

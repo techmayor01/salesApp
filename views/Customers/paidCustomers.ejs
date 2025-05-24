@@ -38,42 +38,32 @@
                   <th class="p-3 border border-gray-200">Paid Amount</th>
                 </tr>
               </thead>
-              <tbody>
-                <% if (customers.length > 0) { %>
-                  <% customers.forEach((customer, index) => { 
-                       const totalAmount = customer.transactions.reduce((sum, t) => sum + t.total, 0);
-                       const paidAmount = customer.transactions.reduce((sum, t) => sum + t.paid_amount, 0);
-                  %>
-                    <tr class="border-t">
-                      <td class="p-3 border border-gray-200"><%= index + 1 %></td>
-                      <td class="p-3 border border-gray-200"><%= customer.customer_name %></td>
-                      <td class="p-3 border border-gray-200"><%= customer.mobile %></td>
-                      <td class="p-3 border border-gray-200"><%= customer.email %></td>
-                      <td class="p-3 border border-gray-200"><%= totalAmount.toFixed(2) %></td>
-                      <td class="p-3 border border-gray-200"><%= paidAmount.toFixed(2) %></td>
-                    
-                    </tr>
-                  <% }) %>
-                <% } else { %>
-                  <tr class="border-t">
-                    <td colspan="7" class="text-center p-3">No fully paid customers found.</td>
-                  </tr>
-                <% } %>
-              </tbody>
-              <tfoot>
-                <% if (customers.length > 0) { %>
-                  <tr class="font-semibold">
-                    <td colspan="4" class="p-3 text-right border border-gray-200">Total:</td>
-                    <td class="p-3 border border-gray-200">
-                      <%= customers.reduce((sum, customer) => sum + customer.transactions.reduce((s, t) => s + t.total, 0), 0).toFixed(2) %>
-                    </td>
-                    <td class="p-3 border border-gray-200">
-                      <%= customers.reduce((sum, customer) => sum + customer.transactions.reduce((s, t) => s + t.paid_amount, 0), 0).toFixed(2) %>
-                    </td>
-                    <td></td>
-                  </tr>
-                <% } %>
-              </tfoot>
+          <tbody>
+  <% if (customers.length > 0) { %>
+    <% customers.forEach((customer, index) => { %>
+
+      <% customer.transactions.forEach((t, tIndex) => { %>
+        <tr class="border-t">
+          <td class="p-3 border border-gray-200"><%= tIndex + 1 %></td>
+          <td class="p-3 border border-gray-200"><%= customer.customer_name %></td>
+          <td class="p-3 border border-gray-200"><%= t.product %></td>
+          <td class="p-3 border border-gray-200"><%= t.qty %></td>
+          <td class="p-3 border border-gray-200"><%= t.rate %></td>
+          <td class="p-3 border border-gray-200"><%= t.total.toFixed(2) %></td>
+          <td class="p-3 border border-gray-200"><%= t.paid_amount.toFixed(2) %></td>
+          <td class="p-3 border border-gray-200" style="<%= t.remaining_amount > 0 ? 'color:red;' : '' %>">
+            <%= t.remaining_amount.toFixed(2) %>
+          </td>
+        </tr>
+      <% }) %>
+    <% }) %>
+  <% } else { %>
+    <tr>
+      <td colspan="7" class="text-center p-3">No customers found.</td>
+    </tr>
+  <% } %>
+</tbody>
+
             </table>
             
             </div>

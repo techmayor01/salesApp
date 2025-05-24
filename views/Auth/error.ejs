@@ -1,0 +1,37 @@
+<!-- views/Auth/error.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Error <%= error.status %></title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #fefefe; color: #333; }
+    h1 { color: #cc0000; }
+    pre { background: #eee; padding: 10px; overflow-x: auto; }
+    a.back-link {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 15px;
+      background: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+    a.back-link:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Error <%= error.status %></h1>
+  <p><%= error.message %></p>
+
+  <% if (error.stack) { %>
+    <h3>Stack Trace:</h3>
+    <pre><%= error.stack %></pre>
+  <% } %>
+
+  <!-- Back link: tries to use HTTP referer, or fallback to '/' -->
+  <a href="<%= backUrl || '/' %>" class="back-link">Go Back</a>
+</body>
+</html>

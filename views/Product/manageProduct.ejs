@@ -86,10 +86,13 @@
                           />
                         </td>
                         <% if (user.role.toLowerCase() === 'admin' || user.role.toLowerCase() === 'owner') { %>
-                        <td class="p-3 border border-gray-200">
+                        <td class="p-3 border border-gray-200" style="display: flex; gap: 5px;">
                             <a href="/deleteProduct/<%= product._id %>" class="bg-red-500 text-white px-2 py-1 rounded-md">
                               <i class="fa-solid fa-trash"></i>
                             </a>
+                            <button onclick="openAdjustStockModal('<%= product._id %>')" class="bg-blue-500 text-white px-2 py-1 rounded-md">
+                              Adjust
+                            </button>
                           </td>
                           <% } %>
                         
@@ -111,6 +114,345 @@
 
           <%- include('../partials/footer') %>
         </main>
+        <div
+  id="adjustStockModal"
+  style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  "
+>
+  <div
+    style="
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+      position: relative;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    "
+  >
+    <button
+      onclick="closeAdjustStockModal()"
+      style="
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        background: transparent;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: #444;
+      "
+    >
+      &times;
+    </button>
+
+    <div style="margin-bottom: 20px;">
+      <label for="productNameInput" style="display: block; font-weight: 600; margin-bottom: 6px; color: #333;">Product Name</label>
+      <input
+        id="productNameInput"
+        type="text"
+        placeholder="Product Name"
+        style="width: 100%; padding: 10px 14px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; outline-color: #3b82f6;"
+      />
+    </div>
+
+    <!-- Added Manufacturing and Expiration Dates -->
+    <div style="margin-bottom: 20px; display: flex; gap: 16px;">
+      <div style="flex: 1;">
+        <label for="mfgDateInput" style="display: block; font-weight: 600; margin-bottom: 6px; color: #333;">Manufacturing Date</label>
+        <input
+          id="mfgDateInput"
+          name="mfgDate"
+          type="date"
+          style="width: 100%; padding: 10px 14px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; outline-color: #3b82f6;"
+        />
+      </div>
+      <div style="flex: 1;">
+        <label for="expDateInput" style="display: block; font-weight: 600; margin-bottom: 6px; color: #333;">Expiration Date</label>
+        <input
+          id="expDateInput"
+          name="expDate"
+          type="date"
+          style="width: 100%; padding: 10px 14px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; outline-color: #3b82f6;"
+        />
+      </div>
+    </div>
+
+    <!-- New product image file input -->
+    <div style="margin-bottom: 20px;">
+      <label for="productImageInput" style="display: block; font-weight: 600; margin-bottom: 6px; color: #333;">Update Product Image</label>
+      <input
+        id="productImageInput"
+        name="product_image"
+        type="file"
+        accept="image/*"
+        style="width: 100%; padding: 10px 14px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px;"
+      />
+    </div>
+
+    <form id="adjustStockForm" action="/adjustStock" style="display: grid; gap: 24px;" method="post" enctype="multipart/form-data">
+      <input type="hidden" id="adjustProductId" name="productId" />
+
+      <div id="variantsContainer" style="display: grid; gap: 20px;"></div>
+
+      <button
+        type="button"
+        onclick="addVariant(true)"
+        style="margin-top: 10px; background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;"
+      >
+        + Add Another Variant
+      </button>
+
+      <!-- Added Reasons for Adjustment textarea -->
+      <div>
+        <label for="adjustmentReason" style="display: block; font-weight: 600; margin-bottom: 6px; color: #333;">Reasons for Adjustment</label>
+        <textarea
+          id="adjustmentReason"
+          name="adjustmentReason"
+          rows="4"
+          placeholder="Enter reasons for the stock adjustment..."
+          style="width: 100%; padding: 10px 14px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; resize: vertical;"
+        ></textarea>
+      </div>
+
+      <div style="text-align: right;">
+        <button
+          type="button"
+          onclick="closeAdjustStockModal()"
+          style="background: #e5e7eb; border: none; padding: 10px 16px; border-radius: 6px; margin-right: 12px; cursor: pointer; font-weight: 600; color: #333;"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          style="background: #2563eb; border: none; padding: 10px 16px; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;"
+        >
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+        </div>
+        <div id="successLoader" style="
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 18px;
+  font-family: sans-serif;
+">
+  <div class="spinner" style="
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid #ffffff;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  "></div>
+  Saving stock successfully... refreshing
+</div>
+
+<style>
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+
+<script>
+  const unitCodeOptions = ["ctns", "schts", "rolls", "pkts", "pcs", "cs", "dz"];
+  let imageHtml = "";
+
+  function openAdjustStockModal(productId) {
+    fetch(`/api/product/${productId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        document.getElementById("adjustProductId").value = data._id;
+        document.getElementById("productNameInput").value = data.product;
+
+        // Set manufacturing and expiration dates if available
+        document.getElementById("mfgDateInput").value = data.mfgDate ? data.mfgDate.split("T")[0] : "";
+        document.getElementById("expDateInput").value = data.expDate ? data.expDate.split("T")[0] : "";
+
+        imageHtml = `
+          <label style="display:block; font-weight:600; margin-bottom:4px;">Product Image</label>
+          <input type="file" id="productImageInput" name="product_image" accept="image/*" style="margin-bottom:12px;" />
+
+          <div style="margin-top: 12px; text-align:center;">
+            <img src="/media/uploads/${data.product_image}" alt="Product Image"
+              style="max-width: 100px; border-radius: 6px; object-fit: cover;" />
+          </div>`;
+
+        const container = document.getElementById("variantsContainer");
+        container.innerHTML = "";
+        data.variants.forEach((v, i) => {
+          addVariant(false, v, i !== 0);
+        });
+
+        document.getElementById("adjustStockModal").style.display = "flex";
+        document.body.style.overflow = "hidden";
+      })
+      .catch((err) => alert(err.message));
+  }
+
+  function closeAdjustStockModal() {
+    document.getElementById("adjustStockModal").style.display = "none";
+    document.body.style.overflow = "auto";
+  }
+
+  function addVariant(isNew = false, data = {}, showTotal = true) {
+    const container = document.getElementById("variantsContainer");
+    const uid = Date.now() + Math.random();
+
+    // Show Delete button only if NOT the first variant
+    const deleteButtonHtml = (isNew || container.children.length > 0)
+      ? `<button type="button" onclick="this.closest('div[variant-wrapper]').remove()" style="font-size: 14px; color: #ef4444; background: none; border: none; cursor: pointer;">
+           Delete
+         </button>`
+      : ``;
+
+    const totalInBaseUnitHtml = showTotal
+      ? `<label style="display:block; font-weight:600; margin-bottom:4px;">Total in Base Unit</label>
+         <input type="number" name="totalInBaseUnit" value="${data.totalInBaseUnit || 0}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px;" />`
+      : ``;
+
+    const variantHTML = document.createElement("div");
+    variantHTML.style.border = "1px solid #ddd";
+    variantHTML.style.borderRadius = "8px";
+    variantHTML.style.padding = "16px";
+    variantHTML.style.position = "relative";
+    variantHTML.setAttribute("variant-wrapper", "true");
+
+    variantHTML.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 600;">Unit: ${data.unitCode || ""}</span>
+        <div>
+          <button type="button" onclick="toggleDetails('${uid}')" style="font-size: 14px; color: #2563eb; background: none; border: none; cursor: pointer; margin-right: 10px;">
+            Expand
+          </button>
+          ${deleteButtonHtml}
+        </div>
+      </div>
+
+      <div id="details-${uid}" style="display: none; margin-top: 16px;">
+        <label style="display:block; font-weight:600; margin-bottom:4px;">Unit Code</label>
+        <select name="unitCode" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px;">
+          ${unitCodeOptions
+            .map((code) => `<option value="${code}" ${code === data.unitCode ? "selected" : ""}>${code}</option>`)
+            .join("")}
+        </select>
+
+        <label style="display:block; font-weight:600; margin-bottom:4px;">Quantity</label>
+        <input type="number" name="quantity" value="${data.quantity || 0}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px;" />
+
+        <label style="display:block; font-weight:600; margin-bottom:4px;">Low Stock Alert</label>
+        <input type="number" name="lowStockAlert" value="${data.lowStockAlert || 0}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px;" />
+
+        ${totalInBaseUnitHtml}
+
+        <label style="display:block; font-weight:600; margin-bottom:4px;">Supplier Price</label>
+        <input type="number" name="supplierPrice" value="${data.supplierPrice || 0}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px;" />
+
+        <label style="display:block; font-weight:600; margin-bottom:4px;">Sell Price</label>
+        <input type="number" name="sellPrice" value="${data.sellPrice || 0}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+
+        ${imageHtml}
+      </div>
+    `;
+
+    container.appendChild(variantHTML);
+  }
+
+  function toggleDetails(id) {
+    const section = document.getElementById(`details-${id}`);
+    section.style.display = section.style.display === "none" ? "block" : "none";
+  }
+
+  document.getElementById("adjustStockForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const productId = document.getElementById("adjustProductId").value;
+    const productName = document.getElementById("productNameInput").value.trim();
+    const mfgDate = document.getElementById("mfgDateInput").value;
+    const expDate = document.getElementById("expDateInput").value;
+    const adjustmentReason = document.getElementById("adjustmentReason").value.trim();
+
+    const variantDivs = [...document.querySelectorAll("#variantsContainer > div[variant-wrapper]")];
+
+    const variants = variantDivs.map((div) => {
+      const get = (name) => {
+        const input = div.querySelector(`[name="${name}"]`);
+        return input ? parseFloat(input.value) || 0 : undefined;
+      };
+
+      return {
+        unitCode: div.querySelector('[name="unitCode"]')?.value || "",
+        quantity: get("quantity"),
+        lowStockAlert: get("lowStockAlert"),
+        totalInBaseUnit: div.querySelector('[name="totalInBaseUnit"]') ? get("totalInBaseUnit") : undefined,
+        supplierPrice: div.querySelector('[name="supplierPrice"]') ? get("supplierPrice") : undefined,
+        sellPrice: div.querySelector('[name="sellPrice"]') ? get("sellPrice") : undefined,
+      };
+    });
+
+    const formData = new FormData();
+    formData.append("productId", productId);
+    formData.append("productName", productName);
+    formData.append("mfgDate", mfgDate);
+    formData.append("expDate", expDate);
+    formData.append("adjustmentReason", adjustmentReason);
+    formData.append("variants", JSON.stringify(variants));
+
+    const productImageInput = document.getElementById("productImageInput");
+    if (productImageInput && productImageInput.files.length > 0) {
+      formData.append("product_image", productImageInput.files[0]);
+    }
+
+    fetch("/adjustStock", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to save adjustments");
+        return res.json();
+      })
+      .then((data) => {
+           closeAdjustStockModal();
+          const loader = document.getElementById("successLoader");
+          loader.style.display = "flex";
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+      })
+      .catch((err) => alert(err.message));
+  });
+    window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("successLoader").style.display = "none";
+});
+</script>
+
+
+
+
+
+
       </div>
     </div>
 

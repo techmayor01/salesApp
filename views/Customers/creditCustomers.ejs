@@ -42,33 +42,37 @@
                     <th class="p-3 border border-gray-200">Option</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <% if (customers.length > 0) { %>
-                    <% customers.forEach((customer, index) => { 
-                         const totalAmount = customer.transactions.reduce((sum, t) => sum + t.total, 0);
-                         const paidAmount = customer.transactions.reduce((sum, t) => sum + t.paid_amount, 0);
-                         const remainingAmount = customer.transactions.reduce((sum, t) => sum + t.remaining_amount, 0);
-                    %>
-                      <tr class="border-t">
-                        <td class="p-3 border border-gray-200"><%= index + 1 %></td>
-                        <td class="p-3 border border-gray-200"><%= customer.customer_name %></td>
-                        <td class="p-3 border border-gray-200"><%= customer.mobile %></td>
-                        <td class="p-3 border border-gray-200"><%= customer.email %></td>
-                        <td class="p-3 border border-gray-200"><%= totalAmount.toFixed(2) %></td>
-                        <td class="p-3 border border-gray-200"><%= paidAmount.toFixed(2) %></td>
-                        <td class="p-3 border border-gray-200" style="color: red;"><%= remainingAmount.toFixed(2) %></td>
-                        <td class="p-3 border border-gray-200">
-                          <!-- You can add option buttons here, like View Details or Pay -->
-                          <a href="/payCustomer/<%= customer._id %>" class="bg-blue-500 text-white px-2 py-1 rounded-md">Pay</a>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  <% } else { %>
-                    <tr class="border-t">
-                      <td colspan="8" class="text-center p-3">No customers with remaining balance.</td>
-                    </tr>
-                  <% } %>
-                </tbody>
+             <tbody>
+  <% let hasUnpaid = false; %>
+  <% customers.forEach((customer, index) => { 
+       const unpaidTransactions = customer.transactions.filter(t => t.remaining_amount > 0);
+       if (unpaidTransactions.length > 0) {
+         hasUnpaid = true;
+         unpaidTransactions.forEach((t, i) => {
+  %>
+    <tr class="border-t">
+      <td class="p-3 border border-gray-200"><%= index + 1 %>.<%= i + 1 %></td>
+      <td class="p-3 border border-gray-200"><%= customer.customer_name %></td>
+      <td class="p-3 border border-gray-200"><%= customer.mobile %></td>
+      <td class="p-3 border border-gray-200"><%= customer.email %></td>
+      <td class="p-3 border border-gray-200"><%= t.total.toFixed(2) %></td>
+      <td class="p-3 border border-gray-200"><%= t.paid_amount.toFixed(2) %></td>
+      <td class="p-3 border border-gray-200" style="color: red;"><%= t.remaining_amount.toFixed(2) %></td>
+      <td class="p-3 border border-gray-200">
+        <a href="/payCustomer/<%= customer._id %>" class="bg-blue-500 text-white px-2 py-1 rounded-md">Pay</a>
+      </td>
+    </tr>
+  <%   });
+       }
+     }); %>
+
+  <% if (!hasUnpaid) { %>
+    <tr class="border-t">
+      <td colspan="8" class="text-center p-3">No unpaid transactions found.</td>
+    </tr>
+  <% } %>
+</tbody>
+
                 
               </table>
             </div>
