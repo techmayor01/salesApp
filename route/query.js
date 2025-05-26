@@ -47,26 +47,34 @@ router.get('/search-stock', async (req, res) => {
 
 // PRODUCT QUERY 
 router.get('/search-product', async (req, res) => {
-    const query = req.query.q;
-    if (!query) return res.json([]);
-  
-    try {
-      const products = await Product.find({
-        product: { $regex: query, $options: "i" }
-      }).limit(10); // Limit results
-  
-      // Add available_qty field to the response by summing quantities of variants
-      const productsWithAvailableQty = products.map(product => {
-        const available_qty = product.variants.reduce((sum, variant) => sum + variant.quantity, 0);
-        return { ...product.toObject(), available_qty };
-      });
-  
-      res.json(productsWithAvailableQty);
-    } catch (error) {
-      console.error('Error searching products:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
+  const query = req.query.q;
+  if (!query) return res.json([]);
+
+  // Assuming req.user.branch contains the current logged-in branch ID
+  const branchId = req.user.branch; 
+
+  if (!branchId) {
+    return res.status(400).json({ error: 'Branch not specified' });
+  }
+
+  try {
+    const products = await Product.find({
+      branch: branchId,                   // Filter by branch
+      product: { $regex: query, $options: "i" }
+    }).limit(10);
+
+    const productsWithAvailableQty = products.map(product => {
+      const available_qty = product.variants.reduce((sum, variant) => sum + variant.quantity, 0);
+      return { ...product.toObject(), available_qty };
+    });
+
+    res.json(productsWithAvailableQty);
+  } catch (error) {
+    console.error('Error searching products:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
   
   
 router.get('/searchProduct-details', (req, res) => {

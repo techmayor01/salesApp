@@ -1907,168 +1907,138 @@ router.get('/searchProduct', async (req, res) => {
 
 
 router.post('/stockTransfer', (req, res) => {
-  const { from_branch, to_branch, productId, unitCode, quantity, note } = req.body;
+  console.log("Received stock transfer request:", req.body);
 
-  // Normalize to arrays
+  const {
+    from_branch,
+    to_branch,
+    transaction_number,
+    note,
+    product,
+    productId,
+    unitCode,
+    supplierPrice,
+    sellPrice,
+    quantity,
+  } = req.body;
+
+  // Normalize all to arrays
+  const products = Array.isArray(product) ? product : [product];
+  const productIds = Array.isArray(productId) ? productId : [productId];
   const unitCodes = Array.isArray(unitCode) ? unitCode : [unitCode];
+  const supplierPrices = Array.isArray(supplierPrice) ? supplierPrice : [supplierPrice];
+  const sellPrices = Array.isArray(sellPrice) ? sellPrice : [sellPrice];
   const quantities = Array.isArray(quantity) ? quantity : [quantity];
 
-  Product.findById(productId)
-    .then(sourceProduct => {
-      if (!sourceProduct) {
-        return res.status(404).send("Source product not found.");
-      }
+  let processedCount = 0;
 
-      Product.findOne({ product: sourceProduct.product, branch: to_branch })
-        .then(destProduct => {
-          if (destProduct) {
-            // Product exists in destination branch — update variants
-            unitCodes.forEach((code, i) => {
-              const qty = parseInt(quantities[i]);
-              const existingVariant = destProduct.variants.find(v => v.unitCode === code);
-              if (existingVariant) {
-                existingVariant.quantity += qty;
-              } else {
-                const sourceVariant = sourceProduct.variants.find(v => v.unitCode === code);
-                if (sourceVariant) {
-                  destProduct.variants.push({
-                    unitCode: code,
-                    quantity: qty,
-                    lowStockAlert: sourceVariant.lowStockAlert,
-                    supplierPrice: sourceVariant.supplierPrice,
-                    sellPrice: sourceVariant.sellPrice,
-                    supplier: sourceVariant.supplier
-                  });
-                }
-              }
-            });
+  function processNextProduct() {
+    if (processedCount >= productIds.length) {
+      // All done, respond or redirect
+      return res.redirect('/stockTransfer');
+    }
 
-            destProduct.save()
-              .then(updated => {
-                updateSourceProduct();
-              })
-              .catch(err => {
-                console.error("Error updating destination product:", err);
-                res.status(500).send("Failed to update destination product.");
-              });
+    const currentProductId = productIds[processedCount];
+    const currentUnitCode = unitCodes[processedCount];
+    const currentQuantity = parseFloat(quantities[processedCount]);
+    const currentSupplierPrice = parseFloat(supplierPrices[processedCount]);
+    const currentSellPrice = parseFloat(sellPrices[processedCount]);
 
-          } else {
-            // Product does not exist in destination — create it
-            const selectedVariants = [];
+    Product.findById(currentProductId)
+      .then(sourceProduct => {
+        if (!sourceProduct) {
+          throw new Error("Source product not found");
+        }
 
-            unitCodes.forEach((code, i) => {
-              const qty = parseInt(quantities[i]);
-              const sourceVariant = sourceProduct.variants.find(v => v.unitCode === code);
-              if (sourceVariant) {
-                selectedVariants.push({
-                  unitCode: code,
-                  quantity: qty,
-                  lowStockAlert: sourceVariant.lowStockAlert,
-                  supplierPrice: sourceVariant.supplierPrice,
-                  sellPrice: sourceVariant.sellPrice,
-                  supplier: sourceVariant.supplier
-                });
-              }
-            });
+        // Find base variant index by unitCode
+        const baseIndex = sourceProduct.variants.findIndex(v => v.unitCode === currentUnitCode);
+        if (baseIndex === -1) {
+          throw new Error(`Base variant ${currentUnitCode} not found in source product`);
+        }
 
-            const newProduct = new Product({
-              product: sourceProduct.product,
-              category: sourceProduct.category,
-              branch: to_branch,
-              product_detail: sourceProduct.product_detail,
-              mfgDate: sourceProduct.mfgDate,
-              expDate: sourceProduct.expDate,
-              product_image: sourceProduct.product_image,
-              variants: selectedVariants
-            });
+        // Calculate quantities to subtract from each variant
+        const baseQty = currentQuantity;
 
-            newProduct.save()
-              .then(savedProduct => {
-                Branch.findByIdAndUpdate(to_branch, { $push: { stock: savedProduct._id } })
-                  .then(() => {
-                    updateSourceProduct();
-                  })
-                  .catch(err => {
-                    console.error("Failed to update destination branch stock:", err);
-                    res.status(500).send("Destination branch update failed.");
-                  });
-              })
-              .catch(err => {
-                console.error("Failed to create new product in destination:", err);
-                res.status(500).send("Destination product creation failed.");
-              });
-          }
-
-          // Function to deduct from source product and log the transfer
-          function updateSourceProduct() {
-            unitCodes.forEach((code, i) => {
-              const qty = parseInt(quantities[i]);
-              const sourceVariant = sourceProduct.variants.find(v => v.unitCode === code);
-              if (sourceVariant) {
-                sourceVariant.quantity -= qty;
-              }
-            });
-
-            sourceProduct.save()
-              .then(() => {
-                // ✅ Build transfer stock array
-                const transferStockItems = [];
-
-                for (let i = 0; i < unitCodes.length; i++) {
-                  const code = unitCodes[i];
-                  const qty = parseInt(quantities[i]);
-                  const variant = sourceProduct.variants.find(v => v.unitCode === code);
-
-                  transferStockItems.push({
-                    productId: productId,
-                    product: sourceProduct.product,
-                    unitCode: code,
-                    quantity: qty,
-                    supplierPrice: variant?.supplierPrice || 0,
-                    sellPrice: variant?.sellPrice || 0,
-                    worth: qty * (variant?.supplierPrice || 0),
-                    mfgDate: sourceProduct.mfgDate,
-                    expDate: sourceProduct.expDate
-                  });
-                }
-
-                // ✅ Save transfer record
-                const transferRecord = new TransferStock({
-                  transaction_number: `TX-${Date.now()}`,
-                  from_branch,
-                  to_branch,
-                  transfer_date: new Date(),
-                  note: note || '',
-                  stock: transferStockItems
-                });
-
-                transferRecord.save()
-                  .then(() => {
-                    res.redirect('/stockTransfer');
-                  })
-                  .catch(err => {
-                    console.error("Error saving transfer record:", err);
-                    res.status(500).send("Transfer log save failed.");
-                  });
-
-              })
-              .catch(err => {
-                console.error("Failed to update source product quantities:", err);
-                res.status(500).send("Source product update failed.");
-              });
-          }
-
-        })
-        .catch(err => {
-          console.error("Error checking destination product:", err);
-          res.status(500).send("Internal error checking destination.");
+        // Subtract from source product variants according to their totalInBaseUnit
+        sourceProduct.variants.forEach(variant => {
+          const subtractQty = baseQty * (variant.totalInBaseUnit || 1);
+          variant.quantity -= subtractQty;
+          if (variant.quantity < 0) variant.quantity = 0; // Prevent negative stock
         });
-    })
-    .catch(err => {
-      console.error("Error finding source product:", err);
-      res.status(500).send("Failed to retrieve source product.");
-    });
+
+        return sourceProduct.save()
+          .then(() => {
+            // Find or create destination product in the to_branch
+            return Product.findOne({ product: sourceProduct.product, branch: to_branch })
+              .then(destProduct => {
+                if (destProduct) {
+                  // Update variants in destination product
+                  sourceProduct.variants.forEach(sourceVariant => {
+                    const destVariant = destProduct.variants.find(v => v.unitCode === sourceVariant.unitCode);
+                    const addQty = baseQty * (sourceVariant.totalInBaseUnit || 1);
+                    if (destVariant) {
+                      destVariant.quantity += addQty;
+                    } else {
+                      // Add new variant to dest product
+                      destProduct.variants.push({
+                        unitCode: sourceVariant.unitCode,
+                        quantity: addQty,
+                        lowStockAlert: sourceVariant.lowStockAlert,
+                        sellPrice: sourceVariant.sellPrice,
+                        totalInBaseUnit: sourceVariant.totalInBaseUnit || 1
+                      });
+                    }
+                  });
+
+                  // Update product-level supplierPrice and sellPrice
+                  destProduct.supplierPrice = currentSupplierPrice;
+                  destProduct.sellPrice = currentSellPrice;
+
+                  return destProduct.save();
+                } else {
+                  // Create new product with variants adjusted
+                  const newVariants = sourceProduct.variants.map(v => ({
+                    unitCode: v.unitCode,
+                    quantity: baseQty * (v.totalInBaseUnit || 1),
+                    lowStockAlert: v.lowStockAlert,
+                    sellPrice: v.sellPrice,
+                    totalInBaseUnit: v.totalInBaseUnit || 1
+                  }));
+
+                  const newProduct = new Product({
+                    product: sourceProduct.product,
+                    category: sourceProduct.category,
+                    branch: to_branch,
+                    product_detail: sourceProduct.product_detail,
+                    mfgDate: sourceProduct.mfgDate,
+                    expDate: sourceProduct.expDate,
+                    product_image: sourceProduct.product_image,
+                    variants: newVariants,
+                    supplierPrice: currentSupplierPrice,
+                    sellPrice: currentSellPrice
+                  });
+
+                  return newProduct.save()
+                    .then(saved => {
+                      return Branch.findByIdAndUpdate(to_branch, { $push: { stock: saved._id } });
+                    });
+                }
+              });
+          });
+      })
+      .then(() => {
+        processedCount++;
+        processNextProduct();
+      })
+      .catch(err => {
+        console.error("Error during stock transfer:", err);
+        res.status(500).send(err.message || "Internal server error");
+      });
+  }
+
+  processNextProduct();
 });
+
 
 
 
@@ -3076,12 +3046,18 @@ router.get('/search-products', async (req, res) => {
   const query = req.query.q;
   if (!query) return res.json([]);
 
+  const branchId = req.user.branch; // Adjust based on where branch is stored
+
+  if (!branchId) {
+    return res.status(400).json({ error: 'Branch not specified' });
+  }
+
   try {
     const products = await Product.find({
+      branch: branchId,             // Filter by branch here
       product: { $regex: query, $options: "i" }
-    }).limit(10); // Limit results
+    }).limit(10);
 
-    // Add available_qty field to the response by summing quantities of variants
     const productsWithAvailableQty = products.map(product => {
       const available_qty = product.variants.reduce((sum, variant) => sum + variant.quantity, 0);
       return { ...product.toObject(), available_qty };
@@ -3093,6 +3069,7 @@ router.get('/search-products', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 
@@ -3209,7 +3186,7 @@ router.get("/received-stock", (req, res)=>{
   }
 })
 
-router.post('/addReceiveStock', (req, res) => {
+router.post('/addReceiveStock', (req, res, next) => {
   const {
     invoice_number,
     supplier,
@@ -3259,8 +3236,7 @@ router.post('/addReceiveStock', (req, res) => {
           res.redirect('/received-stock');
         })
         .catch(err => {
-          console.error('Error saving received stock:', err);
-          res.status(500).send('Server error');
+          next(err);
         });
     }
 
@@ -3286,13 +3262,12 @@ router.post('/addReceiveStock', (req, res) => {
 
         variants[baseIndex].quantity += parseFloat(qtys[currentIndex]);
 
-        // Update supplierPrice only on product level
         product.supplierPrice = parseFloat(rates[currentIndex]);
 
-        let prevQty = variants[baseIndex].quantity;
-        for (let j = baseIndex + 1; j < variants.length; j++) {
-          prevQty = prevQty * variants[j].totalInBaseUnit;
-          variants[j].quantity = prevQty;
+        const baseQty = variants[baseIndex].quantity;
+        for (let j = 0; j < variants.length; j++) {
+          if (j === baseIndex) continue;
+          variants[j].quantity = baseQty * variants[j].totalInBaseUnit;
         }
 
         return product.save();
@@ -3303,11 +3278,13 @@ router.post('/addReceiveStock', (req, res) => {
       })
       .catch(err => {
         console.error('Error updating product:', err);
-        res.status(500).send('Server error');
+        next(err);
       });
   }
   processNextProduct();
 });
+
+
 
 
 
@@ -4930,12 +4907,6 @@ router.get("/Settings/companyInfo", (req, res) => {
 router.get("/Settings/signOut", (req, res) => {
   res.render("Settings/SignOut", {});
 });
-
-
-
-// router.get("/error-404", (req, res) => {
-//   res.render("Auth/error", { user: req.user });
-// });
 
 
 

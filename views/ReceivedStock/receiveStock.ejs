@@ -90,7 +90,6 @@
                 </thead>
 
                 <tbody id="itemTableBody">
-                  <!-- Initial row -->
                   <tr class="hover:bg-gray-50 item-row">
                     <td class="p-2 border relative">
                       <input type="text" placeholder="Item Name" name="item_name" class="w-full border rounded px-2 py-1 item-name" autocomplete="off" />
@@ -98,15 +97,7 @@
                       <div class="autocomplete-suggestions absolute z-10 bg-white border mt-1 w-full shadow rounded hidden"></div>
                     </td>
                     <td class="p-2 border">
-                      <select name="unitCode" class="w-full border rounded px-2 py-1 text-sm text-gray-700">
-                        <option value="ctns">Ctns</option>
-                        <option value="schts">Schts</option>
-                        <option value="rolls">Rolls</option>
-                        <option value="pkts">Pkts</option>
-                        <option value="pcs">Pcs</option>
-                        <option value="cs">Cs</option>
-                        <option value="dz">Dz</option>
-                      </select>
+                      <input type="text" name="unitCode" class="w-full border rounded px-2 py-1 text-sm text-gray-700 unit-code" readonly />
                     </td>
                     <td class="p-2 border">
                       <input type="number" name="item_qty" class="w-full border rounded px-2 py-1 item-qty" />
@@ -122,6 +113,7 @@
                     </td>
                   </tr>
                 </tbody>
+
 
                <!-- Grand Total -->
                 <tr>
@@ -151,127 +143,130 @@
 
                 <!-- JS Script -->
                 <script>
-                  document.addEventListener("DOMContentLoaded", function () {
-                    const tableBody = document.getElementById("itemTableBody");
-                    const grandTotalInput = document.getElementById("grandTotal");
-                    const paidAmountInput = document.querySelector("input[name='paid_amount']");
+                document.addEventListener("DOMContentLoaded", function () {
+                  const tableBody = document.getElementById("itemTableBody");
+                  const grandTotalInput = document.getElementById("grandTotal");
+                  const paidAmountInput = document.querySelector("input[name='paid_amount']");
 
-                    function calculateRowTotal(row) {
-                      const qty = parseFloat(row.querySelector(".item-qty").value) || 0;
-                      const rate = parseFloat(row.querySelector(".item-rate").value) || 0;
-                      const total = qty * rate;
-                      row.querySelector(".item-total").value = total.toFixed(2);
-                      calculateGrandTotal();
-                    }
+                  function calculateRowTotal(row) {
+                    const qty = parseFloat(row.querySelector(".item-qty").value) || 0;
+                    const rate = parseFloat(row.querySelector(".item-rate").value) || 0;
+                    const total = qty * rate;
+                    row.querySelector(".item-total").value = total.toFixed(2);
+                    calculateGrandTotal();
+                  }
 
-                    function calculateGrandTotal() {
-                      let grandTotal = 0;
-                      document.querySelectorAll(".item-total").forEach(input => {
-                        grandTotal += parseFloat(input.value) || 0;
-                      });
-                      grandTotalInput.value = grandTotal.toFixed(2);
-                      // Update paid amount to match grand total automatically
-                      paidAmountInput.value = grandTotal.toFixed(2);
-                    }
+                  function calculateGrandTotal() {
+                    let grandTotal = 0;
+                    document.querySelectorAll(".item-total").forEach(input => {
+                      grandTotal += parseFloat(input.value) || 0;
+                    });
+                    grandTotalInput.value = grandTotal.toFixed(2);
+                    paidAmountInput.value = grandTotal.toFixed(2);
+                  }
 
-                    function attachEventListeners(row) {
-                      const qtyInput = row.querySelector(".item-qty");
-                      const rateInput = row.querySelector(".item-rate");
-                      const nameInput = row.querySelector(".item-name");
-                      const hiddenIdInput = row.querySelector(".product-id-hidden");
-                      const suggestionBox = row.querySelector(".autocomplete-suggestions");
+                  function attachEventListeners(row) {
+                    const qtyInput = row.querySelector(".item-qty");
+                    const rateInput = row.querySelector(".item-rate");
+                    const nameInput = row.querySelector(".item-name");
+                    const hiddenIdInput = row.querySelector(".product-id-hidden");
+                    const unitCodeInput = row.querySelector(".unit-code");
+                    const suggestionBox = row.querySelector(".autocomplete-suggestions");
 
-                      qtyInput.addEventListener("input", () => {
-                        calculateRowTotal(row);
-                        maybeAddNewRow();
-                      });
+                    qtyInput.addEventListener("input", () => {
+                      calculateRowTotal(row);
+                      maybeAddNewRow();
+                    });
 
-                      rateInput.addEventListener("input", () => {
-                        calculateRowTotal(row);
-                        maybeAddNewRow();
-                      });
+                    rateInput.addEventListener("input", () => {
+                      calculateRowTotal(row);
+                      maybeAddNewRow();
+                    });
 
-                      row.querySelector(".delete-row").addEventListener("click", () => {
-                        if (tableBody.rows.length > 1) {
-                          row.remove();
-                          calculateGrandTotal();
-                        }
-                      });
+                    row.querySelector(".delete-row").addEventListener("click", () => {
+                      if (tableBody.rows.length > 1) {
+                        row.remove();
+                        calculateGrandTotal();
+                      }
+                    });
 
-                      nameInput.addEventListener("input", function () {
-                        const query = this.value;
-                        if (query.length < 2) {
+                    nameInput.addEventListener("input", function () {
+                      const query = this.value;
+                      if (query.length < 2) {
+                        suggestionBox.innerHTML = '';
+                        suggestionBox.classList.add('hidden');
+                        return;
+                      }
+
+                      fetch(`/search-product?q=${encodeURIComponent(query)}`)
+                        .then(res => res.json())
+                        .then(data => {
                           suggestionBox.innerHTML = '';
-                          suggestionBox.classList.add('hidden');
-                          return;
-                        }
+                          if (data.length === 0) {
+                            suggestionBox.classList.add('hidden');
+                            return;
+                          }
 
-                        fetch(`/search-stock?q=${encodeURIComponent(query)}`)
-                          .then(res => res.json())
-                          .then(data => {
-                            suggestionBox.innerHTML = '';
-                            if (data.length === 0) {
+                          data.forEach(item => {
+                            const div = document.createElement("div");
+                            div.textContent = item.product;
+                            div.classList.add("p-2", "hover:bg-blue-100", "cursor-pointer", "text-sm");
+                            div.dataset.id = item._id;
+                            div.dataset.unitcode = (item.variants && item.variants.length > 0) ? item.variants[0].unitCode : '';
+                            div.dataset.supplierprice = item.supplierPrice || "";
+
+                            div.addEventListener("mousedown", function () {
+                              nameInput.value = item.product;
+                              hiddenIdInput.value = item._id;
+                              unitCodeInput.value = div.dataset.unitcode;
+                              if (item.supplierPrice) {
+                                rateInput.value = item.supplierPrice;
+                              }
+                              calculateRowTotal(row);
+                              maybeAddNewRow();
+                              suggestionBox.innerHTML = '';
                               suggestionBox.classList.add('hidden');
-                              return;
-                            }
-
-                            data.forEach(item => {
-                              const div = document.createElement("div");
-                              div.textContent = item.name;
-                              div.classList.add("p-2", "hover:bg-blue-100", "cursor-pointer", "text-sm");
-                              div.dataset.id = item.id;
-                              div.dataset.supplierprice = item.supplierPrice || "";
-
-                              // Use mousedown for faster selection on soft click
-                              div.addEventListener("mousedown", function () {
-                                nameInput.value = item.name;
-                                hiddenIdInput.value = item.id;
-                                if (item.supplierPrice) {
-                                  rateInput.value = item.supplierPrice;
-                                  calculateRowTotal(row);
-                                  maybeAddNewRow();
-                                }
-                                suggestionBox.innerHTML = '';
-                                suggestionBox.classList.add('hidden');
-                              });
-
-                              suggestionBox.appendChild(div);
                             });
 
-                            suggestionBox.classList.remove('hidden');
-                          })
-                          .catch(err => console.error("Autocomplete error:", err));
+                            suggestionBox.appendChild(div);
+                          });
+
+                          suggestionBox.classList.remove('hidden');
+                        })
+                        .catch(err => console.error("Autocomplete error:", err));
+                    });
+
+                    nameInput.addEventListener("blur", () => {
+                      setTimeout(() => suggestionBox.classList.add("hidden"), 100);
+                    });
+                  }
+
+                  function maybeAddNewRow() {
+                    const lastRow = tableBody.lastElementChild;
+                    const itemName = lastRow.querySelector(".item-name").value.trim();
+                    const qty = lastRow.querySelector(".item-qty").value;
+                    const rate = lastRow.querySelector(".item-rate").value;
+
+                    if (itemName && qty && rate) {
+                      const newRow = lastRow.cloneNode(true);
+                      newRow.querySelectorAll("input").forEach(input => {
+                        if (!input.classList.contains("product-id-hidden")) {
+                          input.value = "";
+                        }
                       });
+                      newRow.querySelector(".autocomplete-suggestions").innerHTML = '';
+                      newRow.querySelector(".autocomplete-suggestions").classList.add("hidden");
 
-                      nameInput.addEventListener("blur", () => {
-                        setTimeout(() => suggestionBox.classList.add("hidden"), 100);
-                      });
+                      tableBody.appendChild(newRow);
+                      attachEventListeners(newRow);
                     }
+                  }
 
-                    function maybeAddNewRow() {
-                      const lastRow = tableBody.lastElementChild;
-                      const itemName = lastRow.querySelector(".item-name").value.trim();
-                      const qty = lastRow.querySelector(".item-qty").value;
-                      const rate = lastRow.querySelector(".item-rate").value;
-
-                      if (itemName && qty && rate) {
-                        const newRow = lastRow.cloneNode(true);
-                        newRow.querySelectorAll("input, select").forEach(input => {
-                          if (input.type === "text" || input.type === "number") input.value = "";
-                          if (input.classList.contains("product-id-hidden")) input.value = "";
-                        });
-                        newRow.querySelector(".autocomplete-suggestions").innerHTML = '';
-                        newRow.querySelector(".autocomplete-suggestions").classList.add("hidden");
-
-                        tableBody.appendChild(newRow);
-                        attachEventListeners(newRow);
-                      }
-                    }
-
-                    const initialRow = tableBody.querySelector(".item-row");
-                    attachEventListeners(initialRow);
-                  });
+                  const initialRow = tableBody.querySelector(".item-row");
+                  attachEventListeners(initialRow);
+                });
                 </script>
+
 
 
             </div>
