@@ -89,7 +89,7 @@
     <div class="bg-white p-4 shadow-lg w-full max-w-3xl">
       <div class="text-center border-b pb-4 mb-4">
         <img src="../media/icons/logo.png" alt="" width="100%">
-        <p class="text-sm">CREDIT INVOICE</p>
+        <p class="text-sm" style="text-transform: uppercase;"><%= invoice.sales_type %> INVOICE</p>
       </div>
 
       <div class="grid grid-cols-2 gap-4 text-sm mb-2">
@@ -118,7 +118,7 @@
       <div class="grid grid-cols-2 text-sm mb-4 border-t border-b py-2">
         <p><strong>Customer:</strong> <%= invoice.customer_name %></p>
         <div><strong>Date:</strong> <%= new Date(invoice.payment_date).toLocaleDateString() %></div>
-        <div><strong>Invoice #:</strong> <%= invoice.invoice_no %></div>
+        <div><strong>Invoice #:</strong> <%= invoice.receipt_no %></div>
       </div>
 
       <table class="w-full text-sm mb-4 border">

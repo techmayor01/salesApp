@@ -2,115 +2,295 @@
   <nav class="p-3 px-6 flex items-center justify-between">
     <!-- Left Section -->
     <div class="flex items-center space-x-4">
-      <span class="text-green-700 font-bold text-lg">MY <span class="text-gray-700">Dashboard</span></span>
+      <span class="text-green-700 font-bold text-lg">AJELIELI <span class="text-gray-700">AND SONS</span></span>
 
       <!-- Hamburger Menu (small screens only) -->
-      <i class="fa-solid fa-bars cursor-pointer block lg:hidden" id="sidebarToggle"></i>
+      <!-- <i class="fa-solid fa-bars cursor-pointer block lg:hidden" id="sidebarToggle"></i> -->
 
-      <!-- Search (Hidden on small screens) -->
-      <div class="relative items-center hidden lg:flex">
-        <input id="searchBox" type="text" placeholder="Search for invoice..."
-          class="w-28 sm:w-52 transition-all duration-300 ease-in-out focus:w-80 border px-3 py-1 outline-none" />
-        <span class="absolute right-2 text-gray-500 cursor-pointer">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </span>
+ 
+    </div>
+
+<div class="notificationArea">
+  <div class="notification-slider" id="notificationSlider"></div>
+</div>
+
+<!-- Main Notification Modal -->
+<div class="notification-modal" id="notificationModal">
+  <div class="modal-content">
+    <h4>Notification</h4>
+    <p id="modalMessage">Message goes here</p>
+    <div class="modal-actions">
+      <button onclick="dismissModal()">Dismiss</button>
+      <button onclick="openApproveModal()" style="background-color: #28a745; color: white;">Approve</button>
+      <button onclick="openActionModal()">Action</button>
+    </div>
+  </div>
+</div>
+
+<!-- Approve Confirmation Modal -->
+<div class="notification-modal" id="approveModal">
+  <div class="modal-content">
+    <h4>Are you sure?</h4>
+    <p>Do you want to approve this notification? <br><small>(This will remove it from the list)</small></p>
+    <div class="modal-actions">
+      <button onclick="closeApproveModal()">No</button>
+      <button onclick="approveNotification()">Yes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Action Modal -->
+<div class="notification-modal" id="actionModal">
+  <div class="modal-content">
+    <h4>Choose Action</h4>
+    <p>What would you like to do?</p>
+    <div class="modal-actions" style="flex-direction: column; align-items: flex-start;">
+      <button onclick="viewPage()">View Page</button>
+      <div style="margin-top: 10px;">
+        <label for="ignoreDuration">Ignore for:</label>
+        <input id="ignoreDuration" type="number" min="1" style="width: 60px; margin: 0 5px;">
+        <select id="ignoreUnit">
+          <option value="hours">Hours</option>
+          <option value="days">Days</option>
+          <option value="months">Months</option>
+        </select>
+        <button onclick="ignoreNotification()">Ignore</button>
       </div>
     </div>
+    <div class="modal-actions">
+      <button onclick="closeActionModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.notificationArea {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: #fefefe;
+  border-left: 5px solid #1abc9c;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.notification-slider {
+  position: relative;
+  height: 50px;
+  display: flex;
+  align-items: center;
+}
+
+.slide {
+  position: absolute;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.6s ease-in-out;
+  padding: 15px 20px;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+}
+
+.slide.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.notification-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px 25px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+.modal-content h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.modal-actions button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modal-actions button:first-child {
+  background-color: #ccc;
+  color: #333;
+}
+
+.modal-actions button:last-child {
+  background-color: #1abc9c;
+  color: white;
+}
+
+.modal-actions select,
+.modal-actions input {
+  padding: 5px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+</style>
+
+<script>
+let notifications = [];
+let current = 0;
+let selectedIndex = null;
+let selectedNotification = null;
+
+const slider = document.getElementById('notificationSlider');
+const modal = document.getElementById('notificationModal');
+const modalMessage = document.getElementById('modalMessage');
+const approveModal = document.getElementById('approveModal');
+const actionModal = document.getElementById('actionModal');
+
+async function fetchNotifications() {
+  try {
+    const res = await fetch('/notifications');
+    notifications = await res.json();
+    renderNotifications();
+  } catch (err) {
+    console.error('Failed to load notifications:', err);
+  }
+}
+
+function renderNotifications() {
+  slider.innerHTML = '';
+  notifications.forEach((notification, index) => {
+    const slide = document.createElement('div');
+    slide.className = 'slide' + (index === current ? ' active' : '');
+    slide.innerText = notification.title || 'New Notification';
+    slide.onclick = () => showModal(notification, index);
+    slider.appendChild(slide);
+  });
+}
+
+function showNextSlide() {
+  const slides = document.querySelectorAll('.slide');
+  if (slides.length === 0) return;
+  slides[current]?.classList.remove('active');
+  current = (current + 1) % slides.length;
+  slides[current]?.classList.add('active');
+}
+
+function showModal(notification, index) {
+  selectedIndex = index;
+  selectedNotification = notification;
+  modal.style.display = 'flex';
+  modalMessage.innerText = notification.description || 'No details available.';
+}
+
+function dismissModal() {
+  modal.style.display = 'none';
+}
+
+function openApproveModal() {
+  approveModal.style.display = 'flex';
+}
+
+function closeApproveModal() {
+  approveModal.style.display = 'none';
+}
+
+function approveNotification() {
+  if (!selectedNotification) return;
+
+  fetch(`/notifications/approve/${selectedNotification._id}`, {
+    method: 'POST'
+  }).then(() => {
+    notifications.splice(selectedIndex, 1);
+    selectedNotification = null;
+    current = 0;
+    renderNotifications();
+    closeApproveModal();
+    dismissModal();
+  }).catch(err => console.error(err));
+}
+
+function openActionModal() {
+  actionModal.style.display = 'flex';
+}
+
+function closeActionModal() {
+  actionModal.style.display = 'none';
+}
+
+function viewPage() {
+  if (selectedNotification?.pageLink) {
+    window.location.href = selectedNotification.pageLink;
+  } else {
+    alert("No linked page available.");
+  }
+  closeActionModal();
+}
+
+function ignoreNotification() {
+  const duration = document.getElementById('ignoreDuration').value;
+  const unit = document.getElementById('ignoreUnit').value;
+  if (!duration || !selectedNotification) return alert("Fill out all fields.");
+
+  fetch(`/notifications/ignore/${selectedNotification._id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ duration, unit })
+  }).then(() => {
+    notifications.splice(selectedIndex, 1);
+    selectedNotification = null;
+    renderNotifications();
+    closeActionModal();
+    dismissModal();
+  }).catch(err => console.error(err));
+}
+
+// Run on page load
+window.onload = () => {
+  fetchNotifications();
+  setInterval(showNextSlide, 4000);
+};
+</script>
+
+
 
     <!-- Right Section -->
     <div class="flex items-center space-x-4">
-      <!-- Language (Hidden on small screens) -->
-      <div class="relative hidden lg:block">
-        <select name="branch" id="branchSelect" class="border border-gray-300 rounded px-3 py-1 text-sm">
-          <option value="" disabled selected>Select Branch</option>
-      
-          <% if (user.role.toLowerCase() === 'owner' && branches.length > 0) { %>
-            <% branches.forEach(branch => { %>
-              <option value="<%= branch._id %>"><%= branch.branch_name %></option>
-            <% }); %>
-      
-          <% } else if (user.role.toLowerCase() === 'staff' && user.branch && user.branch.branch_name) { %>
-            <option value="<%= ownerBranch.branch._id %>" selected>
-              <%= user.branch.branch_name %>
-            </option>
-      
-          <% } else { %>
-            <option value="">No branches available</option>
-          <% } %>
-        </select>
-      </div>
-      
-
       <!-- Profile -->
       <div class="relative">
         <button class="text-gray-600 flex items-center">
-          <span id="profileBtn" class="text-gray-400 text-2xl">
-            <i class="fa-solid fa-user-tie"></i>
+          <span id="profileBtn" class="text-gray-400 ">
+            Sign Out <i class="fa-solid fa-right-from-bracket"></i>
           </span>
         </button>
-        <div id="profileDropdown"
-          class="absolute right-0 mt-2 w-40 bg-white border shadow-lg opacity-0 invisible transition-opacity duration-300 z-50">
-          <ul class="p-2">
-            <li class="p-2 hover:bg-gray-200 cursor-pointer">Profile</li>
-            <li class="p-2 hover:bg-gray-200 cursor-pointer">Help</li>
-            <li class="p-2 hover:bg-gray-200 cursor-pointer">Sign out</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- More Options (Only on small screens) -->
-      <div class="relative block lg:hidden">
-        <button id="moreBtn" class="text-xl text-gray-600">
-          <i class="fa-solid fa-ellipsis-vertical"></i>
-        </button>
-        <div id="moreDropdown"
-          class="absolute right-0 mt-2 w-64 bg-white border shadow-lg opacity-0 invisible transition-opacity duration-300 z-50 p-4 space-y-4">
-          <!-- Search (mobile) -->
-          <div class="relative">
-            <input type="text" placeholder="Search for invoice..."
-              class="w-full border px-3 py-1 outline-none" />
-            <span class="absolute right-3 top-2 text-gray-500 cursor-pointer">
-              <i class="fa-solid fa-magnifying-glass"></i>
-            </span>
-          </div>
-          <!-- Languages (mobile) -->
-          <div>
-            <label class="block text-sm mb-1 text-gray-700">Languages</label>
-            <ul>
-              <li class="p-2 hover:bg-gray-200 cursor-pointer">English</li>
-              <li class="p-2 hover:bg-gray-200 cursor-pointer">French</li>
-              <li class="p-2 hover:bg-gray-200 cursor-pointer">Spanish</li>
-            </ul>
-          </div>
-        </div>
       </div>
     </div>
   </nav>
 
-  <!-- JavaScript for Interactions -->
-  <script>
-    document.getElementById('sidebarToggle').addEventListener('click', function () {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('-translate-x-full');
-      sidebar.classList.toggle('translate-x-0');
-    });
-
-    document.getElementById('languageBtn').addEventListener('click', function () {
-      const dropdown = document.getElementById('languageDropdown');
-      dropdown.classList.toggle('opacity-0');
-      dropdown.classList.toggle('invisible');
-    });
-
-    document.getElementById('profileBtn').addEventListener('click', function () {
-      const dropdown = document.getElementById('profileDropdown');
-      dropdown.classList.toggle('opacity-0');
-      dropdown.classList.toggle('invisible');
-    });
-
-    document.getElementById('moreBtn').addEventListener('click', function () {
-      const dropdown = document.getElementById('moreDropdown');
-      dropdown.classList.toggle('opacity-0');
-      dropdown.classList.toggle('invisible');
-    });
-  </script>
+ 
 </header>

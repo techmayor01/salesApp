@@ -23,7 +23,7 @@
             <!-- Loan Name -->
             <div class="relative grid grid-cols-3 items-center">
                 <label class="text-gray-700 text-sm">Name <span class="text-red-500">*</span></label>
-                <input type="text" id="loanerInput" name="loaner" autocomplete="off"
+                <input type="text" autocomplete="off" id="loanerInput" name="loaner"
                     class="col-span-2 border-b border-gray-400 py-2 w-full" placeholder="Loaner">
                 <input type="hidden" name="loanerId" id="loanerId">
                 <ul id="loanerSuggestions" class="absolute z-10 bg-white border border-gray-300 w-full hidden max-h-40 overflow-y-auto">
@@ -38,20 +38,29 @@
              <!-- Loan Amount -->
             <div class="grid grid-cols-3 items-center">
                 <label class="text-gray-700 text-sm">Loan Amount <span class="text-red-500">*</span></label>
-                <input type="number" name="loanAmount" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Loan Amount">
+                <input type="number" autocomplete="off" name="loanAmount" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="Loan Amount">
             </div>
 
             <!-- Contract Date -->
             <div class="grid grid-cols-3 items-center">
                 <label class="text-gray-700 text-sm">Loan Contract Date <span class="text-red-500">*</span></label>
-                <input type="date" name="loanContractDate" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="">
+                <input type="date" id="payment_date" name="loanContractDate" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="">
             </div>
+            <script>
+              const today = new Date().toISOString().split('T')[0];
+              document.getElementById('payment_date').value = today;
+            </script>
 
+    
             <!-- Loan Due Date -->
             <div class="grid grid-cols-3 items-center">
                 <label class="text-gray-700 text-sm">Loan Contract End Date <span class="text-red-500">*</span></label>
-                <input type="date" name="loanContractEndDate" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="">
+                <input type="date" id="loanContractEndDate" name="loanContractEndDate" class="col-span-2 border-b border-gray-400  py-2 w-full" placeholder="">
             </div>
+            <script>
+              const loanContractEndDate = new Date().toISOString().split('T')[0];
+              document.getElementById('loanContractEndDate').value = today;
+            </script>
 
 
             <!-- Deatails -->

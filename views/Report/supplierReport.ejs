@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ('../partials/head') %>
+  <body>
+    <div class="relative flex flex-col min-h-screen ">
+      <%- include ('../partials/header') %>
+    
+      <div class="flex flex-row">
+        <!-- Sidebar -->
+        <div class="w-[220px] p-4 h-[100vh] bg-white shadow-md">
+          <%- include ('../partials/sidebar') %>
+        </div>
+    
+        <!-- Main Content -->
+        <main class="relative top-16 p-6 overflow-auto" style="width: calc(100% - 220px)">
+          <div class="flex flex-row justify-between items-center mb-6">
+            <h1 class="text-2xl font-semibold text-gray-900">Supplier Report</h1>
+          </div>
+    
+          <!-- Filters Section -->
+          <div id="creditorsFilterBlock" class="mb-6 flex flex-wrap items-center gap-4 text-sm bg-white p-4 rounded-lg shadow-md">    
+                <form method="GET" action="/supplierInvoice-report" class="mb-6 flex flex-wrap items-center gap-4 text-sm bg-white p-4 rounded-lg shadow-md">
+              <input type="hidden" name="supplierId" id="supplierId" />
+              
+              <input
+                style="height: 40px; outline: none;"
+                type="text"
+                id="supplierInput"
+                placeholder="Enter Supplier Name"
+                class="input-field"
+                autocomplete="off"
+              />
+
+              <ul id="suggestionsList" style="bottom: 25%; width: 15%;" class="absolute bg-white border border-gray-200 shadow-md z-50 w-60 mt-1 hidden rounded-md"></ul>
+
+              <p class="font-semibold text-gray-700">Date Range</p>
+              <input type="date" name="startDate" class="input-field" value="<%= startDate || '' %>" />
+              <span class="text-gray-500">to</span>
+              <input type="date" name="endDate" class="input-field" value="<%= endDate || '' %>" />
+
+              <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition-all duration-300">
+                Get
+              </button>
+            </form>
+          </div>
+    
+          <!-- Creditors Table Section -->
+        <!-- Creditors Table Section -->
+<div id="creditorsTableSection" class="mx-auto p-8 rounded-lg shadow-md" style="padding: 15px; <%= entries.length === 0 ? 'display:none;' : '' %>">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Supplier Ledger</h2>
+  <div class="overflow-x-auto">
+    <table id="creditorsTable" class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-blue-50 text-blue-700">
+        <tr>
+          <th class="px-4 border py-3 text-left font-semibold">Date</th>
+          <th class="px-4 border py-3 text-left font-semibold">Supplier</th>
+          <th class="px-4 border py-3 text-left font-semibold">Type</th>
+          <th class="px-4 border py-3 text-left font-semibold">Amount</th>
+          <th class="px-4 border py-3 text-left font-semibold">Balance</th>
+          <th class="px-4 border py-3 text-left font-semibold">Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (entries.length > 0) { %>
+          <% entries.forEach(entry => { %>
+            <tr>
+              <td class="px-4 border py-2"><%= new Date(entry.date).toISOString().slice(0, 10) %></td>
+              <td class="px-4 border py-2"><%= entry.supplier?.supplier || 'Unknown' %></td>
+              <td class="px-4 border py-2"><%= entry.type %></td>
+              <td class="px-4 border py-2">₦<%= entry.amount.toLocaleString() %></td>
+              <td class="px-4 border py-2">₦<%= entry.balance.toLocaleString() %></td>
+              <td class="px-4 border py-2"><%= entry.reason || '-' %></td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="6" class="text-center py-4">No records found.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+    
+        </main>
+      </div>
+    </div>
+    <%- include ('../partials/footer') %>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const getBtn = document.getElementById("getCreditorsBtn");
+        const tableSection = document.getElementById("creditorsTableSection");
+    
+        getBtn.addEventListener("click", () => {
+          tableSection.classList.remove("hidden");
+        });
+      });
+    </script>
+
+    <script>
+      $(document).ready(function () {
+          $("#creditorsTable").DataTable({
+            responsive: true,
+            scrollX: false,
+            dom: "Bfrtip",
+            buttons: ["copy", "excel", "csv", "pdf", "print"],
+            language: {
+              searchPlaceholder: "Search invoice...",
+              search: "",
+            },
+          });
+        });
+    </script>
+    <script>
+        const supplierInput = document.getElementById("supplierInput");
+        const supplierIdInput = document.getElementById("supplierId");
+        const suggestionsList = document.getElementById("suggestionsList");
+
+        supplierInput.addEventListener("input", function () {
+          const query = this.value.trim();
+          if (!query || query.length < 2) {
+            suggestionsList.classList.add("hidden");
+            suggestionsList.innerHTML = "";
+            supplierIdInput.value = "";  // clear hidden supplierId if input cleared
+            return;
+          }
+
+          console.log("Fetching suggestions for:", query);
+
+          fetch(`/api/suppliers/suggest?q=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(suppliers => {
+              console.log("Suppliers received:", suppliers);
+
+              suggestionsList.innerHTML = "";
+              if (!suppliers.length) {
+                suggestionsList.classList.add("hidden");
+                return;
+              }
+
+              suppliers.forEach(supplier => {
+                const li = document.createElement("li");
+                li.textContent = supplier.supplier;  // Use the supplier field here
+                li.dataset.id = supplier._id;
+                li.className = "px-4 py-2 hover:bg-blue-100 cursor-pointer";
+
+                li.addEventListener("click", () => {
+                  supplierInput.value = supplier.supplier;
+                  supplierIdInput.value = supplier._id;
+                  suggestionsList.classList.add("hidden");
+                });
+
+                suggestionsList.appendChild(li);
+              });
+
+              suggestionsList.classList.remove("hidden");
+            })
+            .catch(err => {
+              console.error("Error fetching supplier suggestions:", err);
+              suggestionsList.classList.add("hidden");
+            });
+        });
+
+        // Optional: Hide suggestions when clicking outside
+        document.addEventListener("click", (e) => {
+          if (!supplierInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+            suggestionsList.classList.add("hidden");
+          }
+        });
+    </script>
+  </body>
+</html>

@@ -35,7 +35,7 @@
     <div class="flex gap-10 text-sm">
       <label class="block text-gray-700 mb-1 w-48">Search Name <span class="text-red-500">*</span></label>
       <div class="w-full relative">
-        <input id="searchInput" type="text" placeholder="Search by Name" class="w-full border border-green-500 p-2 mb-4" />
+        <input id="searchInput" autocomplete="off" type="text" placeholder="Search by Name" class="w-full border border-green-500 p-2 mb-4" />
         <ul id="resultList" class="border border-gray-200 mt-1 bg-white shadow-md absolute z-10 w-full hidden"></ul>
         <div id="resultDetails" class="text-sm space-y-1 mt-2"></div>
       </div>
@@ -46,15 +46,19 @@
       <label class="block text-gray-700 font-medium mt-4 w-48">Cash Received <span class="text-red-500">*</span></label>
       <div class="flex border border-green-500 overflow-hidden w-full">
         <span class="bg-green-200 text-white px-3 flex items-center">₦</span>
-        <input type="number" name="amount" placeholder="Amount" class="w-full p-2 border-none outline-none" required />
+        <input type="number" autocomplete="off" name="amount" placeholder="Amount" class="w-full p-2 border-none outline-none" required />
       </div>
     </div>
 
     <!-- Date -->
     <div class="flex gap-10 text-sm my-3">
       <label class="block text-gray-700 font-medium mt-4 w-48">Date <span class="text-red-500">*</span></label>
-      <input type="date" name="date" class="w-full border border-green-500 p-2" required />
+      <input type="date" name="date" class="w-full border border-green-500 p-2"  id="payment_date" required />
     </div>
+     <script>
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('payment_date').value = today;
+    </script>
 
     <!-- Payment Type -->
     <div class="flex gap-10 text-sm my-3">
@@ -70,7 +74,7 @@
     <!-- Reference -->
     <div class="flex gap-10 text-sm my-3">
       <div class="w-48"></div>
-      <input type="text" name="reference" placeholder="Payment Type Reference # / Detail" class="w-full border border-green-500 p-2 mt-2" />
+      <input type="text" autocomplete="off" name="reference" placeholder="Payment Type Reference # / Detail" class="w-full border border-green-500 p-2 mt-2" />
     </div>
 
     <!-- Submit -->

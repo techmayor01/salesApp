@@ -6,6 +6,11 @@ const cashReceivableSchema = new mongoose.Schema({
     enum: ['Customer', 'Loan'],
     required: true
   },
+  branch: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'Branch'
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -32,9 +37,18 @@ const cashReceivableSchema = new mongoose.Schema({
     enum: ['Cash', 'Credit Card', 'Bank Transfer'],
     required: true
   },
+  receiptNo: {
+    type: String,
+    required: true
+  },
   reference: {
     type: String
-  }
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User'
+  },
 }, {
   timestamps: true
 });

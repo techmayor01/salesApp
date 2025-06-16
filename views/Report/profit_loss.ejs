@@ -12,106 +12,171 @@
           <%- include('../partials/sidebar') %>
         </aside>
     
-        <main class="flex-1 p-6 mt-16 overflow-auto">
-          <!-- Page Title -->
-          <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">📊 Profit/Loss Ledger</h1>
-          </div>
-    
-          <!-- Card Container -->
-          <div class="max-w-7xl mx-auto bg-white shadow-md rounded-lg p-6">
-            <!-- Filters -->
-            <div class="flex flex-wrap items-center gap-4 text-sm mb-8">
-              <label class="text-gray-700 font-medium">Date Range:</label>
-    
-              <input type="date" id="startDate"
-                class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-300" />
-    
-              <span class="text-gray-500">to</span>
-    
-              <input type="date" id="endDate"
-                class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-300" />
-    
-              <button id="getProfitLossBtn"
-                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 shadow-md transition">
-                Get
-              </button>
-            </div>
-    
-            <!-- 📊 Summary Table -->
-            <div class="overflow-x-auto mt-8">
-     
-    
-              <table class="min-w-full text-sm text-left border border-gray-300 rounded">
-                <thead class="bg-gray-100 text-gray-700 font-semibold">
-                  <tr>
-                    <th class="p-3 border">#</th>
-                    <th class="p-3 border">Product Name</th>
-                    <th class="p-3 border">Unit Code</th>
-                    <th class="p-3 border">Qty Sold</th>
-                    <th class="p-3 border">Revenue (₦)</th>
-                    <th class="p-3 border">Cost (₦)</th>
-                    <th class="p-3 border">Profit (₦)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="text-gray-700">
-                    <td class="p-3 border">1</td>
-                    <td class="p-3 border">Paracetamol 500mg</td>
-                    <td class="p-3 border">ctns</td>
-                    <td class="p-3 border">50</td>
-                    <td class="p-3 border">150,000</td>
-                    <td class="p-3 border">100,000</td>
-                    <td class="p-3 border">50,000</td>
-                  </tr>
-                  <tr class="text-gray-700">
-                    <td class="p-3 border">2</td>
-                    <td class="p-3 border">Vitamin C</td>
-                    <td class="p-3 border">pkts</td>
-                    <td class="p-3 border">100</td>
-                    <td class="p-3 border">80,000</td>
-                    <td class="p-3 border">60,000</td>
-                    <td class="p-3 border">20,000</td>
-                  </tr>
-                  <!-- More rows can go here -->
-                </tbody>
-                <tfoot class="bg-gray-50 font-semibold text-gray-800">
-                  <tr>
-                    <td colspan="4" class="p-3 border text-right">Total Revenue</td>
-                    <td class="p-3 border">230,000</td>
-                    <td class="p-3 border"></td>
-                    <td class="p-3 border"></td>
-                  </tr>
-                  <tr>
-                    <td colspan="5" class="p-3 border text-right">Total Cost</td>
-                    <td class="p-3 border">160,000</td>
-                    <td class="p-3 border"></td>
-                  </tr>
-                  <tr>
-                    <td colspan="6" class="p-3 border text-right">Gross Profit</td>
-                    <td class="p-3 border">70,000</td>
-                  </tr>
-                  <tr>
-                    <td colspan="6" class="p-3 border text-right">Total Expenses</td>
-                    <td class="p-3 border">15,000</td>
-                  </tr>
-                  <tr class="bg-green-100">
-                    <td colspan="6" class="p-3 border text-right text-green-800">Net Profit</td>
-                    <td class="p-3 border text-green-800 font-bold">55,000</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        </main>
+<main class="flex-1 p-6 mt-16 overflow-auto">
+  <!-- Page Title -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">📊 Profit/Loss Ledger</h1>
+  </div>
+
+  <!-- Card Container -->
+  <div class="max-w-7xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <!-- Filters -->
+    <div class="flex flex-wrap items-center gap-4 text-sm mb-8">
+      <label class="text-gray-700 font-medium">Date Range:</label>
+
+      <input type="date" id="startDate"
+        class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-300" />
+
+      <span class="text-gray-500">to</span>
+
+      <input type="date" id="endDate"
+        class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-300" />
+
+      <button id="getProfitLossBtn"
+        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 shadow-md transition">
+        Get
+      </button>
+    </div>
+
+    <!-- 📊 Summary Table -->
+    <div class="overflow-x-auto mt-8">
+      <table class="min-w-full text-sm text-left border border-gray-300 rounded" id="profitLossTable" >
+        <thead class="bg-gray-100 text-gray-700 font-semibold">
+          <tr>
+            <th class="p-3 border">#</th>
+            <th class="p-3 border">Product Name</th>
+            <th class="p-3 border">Unit Code</th>
+            <th class="p-3 border">Qty Sold</th>
+            <th class="p-3 border">Revenue (₦)</th>
+            <th class="p-3 border">Cost (₦)</th>
+            <th class="p-3 border">Profit (₦)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dynamic rows go here -->
+        </tbody>
+        <tfoot class="bg-gray-50 font-semibold text-gray-800">
+          <tr><td></td></tr>
+          <tr>
+            <td colspan="3"></td>
+            <td colspan="1" class="p-3" style="text-align: right;">Total Revenue</td>
+            <td class="p-3 border">0</td>
+            <td class="p-3 border"></td>
+            <td class="p-3 border"></td>
+          </tr>
+          <tr>
+            <td colspan="4"></td>
+            <td colspan="1" class="p-3" style="text-align: right;">Total Cost</td>
+            <td class="p-3 border">0</td>
+            <td class="p-3 border"></td>
+          </tr>
+          <tr>
+            <td colspan="6" class="p-3 border text-right" style="text-align: right;">Gross Profit</td>
+            <td class="p-3 border">0</td>
+          </tr>
+          <tr>
+            <td colspan="6" class="p-3 border text-right" style="text-align: right;">Total Expenses</td>
+            <td class="p-3 border">0</td>
+          </tr>
+          <tr>
+            <td colspan="6" class="p-3 border text-right" style="text-align: right;">Total Debt</td>
+            <td class="p-3 border">0</td>
+          </tr>
+          <tr class="bg-green-100">
+            <td colspan="6" class="p-3 border text-right text-green-800" style="text-align: right;">Net Profit</td>
+            <td class="p-3 border text-green-800 font-bold">0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+  document.getElementById('getProfitLossBtn').addEventListener('click', () => {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    if (!startDate || !endDate) {
+      alert('Please select both start and end dates');
+      return;
+    }
+
+    fetch(`/getProfitLossReport?startDate=${startDate}&endDate=${endDate}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+      })
+      .then(data => {
+        const tbody = document.querySelector('#profitLossTable tbody');
+        const tfoot = document.querySelector('#profitLossTable tfoot');
+
+        // Clear existing tbody rows
+        tbody.innerHTML = '';
+
+        // Populate tbody with new rows
+        data.data.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.classList.add('text-gray-700');
+
+          tr.innerHTML = `
+            <td class="p-3 border">${item.index}</td>
+            <td class="p-3 border">${item.product_name}</td>
+            <td class="p-3 border">${item.unitcode}</td>
+            <td class="p-3 border">${item.qty}</td>
+            <td class="p-3 border">${item.revenue.toLocaleString()}</td>
+            <td class="p-3 border">${item.cost.toLocaleString()}</td>
+            <td class="p-3 border">${item.profit.toLocaleString()}</td>
+          `;
+
+          tbody.appendChild(tr);
+        });
+
+        // Update totals in tfoot
+
+        // total revenue cell (5th column, 2nd row)
+        tfoot.rows[1].cells[4].textContent = data.totals.revenue.toLocaleString();
+
+        // total cost cell (6th column, 3rd row)
+        tfoot.rows[2].cells[5].textContent = data.totals.cost.toLocaleString();
+
+        // gross profit cell (7th column, 4th row)
+        tfoot.rows[3].cells[6].textContent = data.totals.grossProfit.toLocaleString();
+
+        // total expenses cell (7th column, 5th row)
+        tfoot.rows[4].cells[6].textContent = data.totals.totalExpenses.toLocaleString();
+
+        // total debt cell (7th column, 6th row)
+        tfoot.rows[5].cells[6].textContent = data.totals.totalDebt.toLocaleString();
+
+        // net profit cell (7th column, 7th row)
+        tfoot.rows[6].cells[6].textContent = data.totals.netProfit.toLocaleString();
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Failed to fetch profit/loss report');
+      });
+  });
+</script>
+
       </div>
     </div>
+    <%- include ('../partials/footer') %>
     
-    <script>
-      $(document).ready(function () {
-        // Future dynamic logic here
-      });
-    </script>
+     <script>
+  $(document).ready(function () {
+    $("#profitLossTable").DataTable({
+      responsive: true,
+      scrollX: false, // keep this if you expect wide tables
+      dom: "Bfrtip",
+      buttons: ["copy", "excel", "csv", "pdf", "print"],
+      language: {
+        searchPlaceholder: "Search Ledger...",
+        search: "",
+      },
+    });
+  });
+</script>
     
   </body>
 </html>

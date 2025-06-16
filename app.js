@@ -24,23 +24,6 @@ mongoose
     console.log("Db connected");
   })
 .catch((err) => console.log(err));
-
-        
-            
-             app.get("/Invoice/paidInvoice", (req, res) => {
-               res.render("Invoice/paidInvoice", {});
-             });
-              app.get("/Invoice/unpaidInvoice", (req, res) => {
-                res.render("Invoice/unpaidInvoice", {});
-              });
-
-            // Expenses  
-          
-
-
-    
-
-             
                      
                         app.get("/Report/expenseLedger", (req, res) => {
                           res.render("Report/expenseLedger", {});

@@ -13,9 +13,22 @@
         class="cal relative top-16 p-4 overflow-auto"
         style="width: calc(100% - 220px)">
         <form action="/addinvoice" method="post">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">
-            Create Sales
-          </h2>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">
+              Create Sales
+            </h2>
+
+<% if (negativeSalesActive) { %>
+  <h2 id="negativeSalesBanner" class="text-xl font-semibold italic text-gray-800 mb-4">
+    Negative Sales Activated
+  </h2>
+<% } else { %>
+  <h2 id="negativeSalesBanner" class="hidden text-xl font-semibold italic text-gray-800 mb-4">
+    Negative Sales Activated
+  </h2>
+<% } %>
+         
+    </div>
           <div class="bg-white px-6 py-2" >
             <div class="flex flex-col gap-4">
               <!-- Hidden input for customer ID -->
@@ -124,6 +137,12 @@
         
             <div class="flex gap-3 items-top" style="display: flex; justify-content: space-between; align-items: center;">
               <a href="/addCustomers" class="px-3 py-1 bg-green-500 text-white text-sm">New Customer</a>
+<% if (user.role === 'owner') { %>
+  <button id="toggleNegativeSales"   type="button"
+   class="px-3 py-1 bg-blue-500 text-white text-sm">
+    <%= negativeSalesActive ? 'Deactivate Negative Sales' : 'Activate Negative Sales' %>
+  </button>
+<% } %>
               <div>
                 <label class="block font-medium text-gray-700 mb-1">
                   Add Discount
@@ -165,6 +184,7 @@
                       type="text"
                       placeholder="product"
                       name="product"
+                      autocomplete="off"
                       class="productSearch w-full border border-gray-200 px-2 py-1" />
                     <ul class="productSuggestions absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded shadow text-sm max-h-60 overflow-y-auto hidden" style="min-height: 100px;"></ul>
                   </td>
@@ -456,6 +476,47 @@
 </script>
 
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("toggleNegativeSales");
+    const banner = document.getElementById("negativeSalesBanner");
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", async function () {
+        try {
+          const res = await fetch("/settings/toggle-negative-sales", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Requested-With": "XMLHttpRequest"
+            }
+          });
+
+          const result = await res.json();
+
+          if (res.ok && result.success) {
+            const isActive = result.active;
+
+            // Update button text
+            toggleBtn.textContent = isActive ? "Deactivate Negative Sales" : "Activate Negative Sales";
+
+            // Show/hide banner
+            if (isActive) {
+              banner.classList.remove("hidden");
+            } else {
+              banner.classList.add("hidden");
+            }
+          } else {
+            alert("Failed to toggle negative sales.");
+          }
+        } catch (error) {
+          console.error("Error toggling negative sales:", error);
+          alert("Something went wrong.");
+        }
+      });
+    }
+  });
+</script>
 
 
 

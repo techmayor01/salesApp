@@ -66,6 +66,10 @@ const invoiceSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  receipt_no: {
+    type: String,
+    required: true
+  },
   branch: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Branch',

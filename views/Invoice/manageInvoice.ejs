@@ -5,53 +5,67 @@
   <%- include ('../partials/head') %>
   <body>
     <div class="relative flex flex-col min-h-screen bg-slate-200">
-      <%- include ('../partials/header') %>
+      <%- include ('../partials/miv') %>
 
       <div class="flex flex-row">
-        <div class="w-[220px] p-4"><%- include ('../partials/sidebar') %></div>
+        <div class="lg:w-[220px] lg:p-4">
+          <%- include ('../partials/sidebar') %>
+        </div>
         <main
-          class="cal relative top-16 p-4 overflow-auto"
-          style="width: calc(100% - 220px)">
-          <div class="flex flex-row justify-between items-center">
-            <h1 class="text-2xl font-semibold">InvoicesList</h1>
-          </div>
+          class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200">
+          <h2 class="text-2xl font-semibold text-gray-800">InvoicesList Record</h2>
+          <div class="max-w-6xl mx-auto mt-6">
+            <!-- Card -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <!-- Table Header -->
+              <div
+                class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <div>
+                  <h2 class="text-2xl font-semibold text-gray-800">
+                    Exporting Invoices Data
+                  </h2>
+                </div>
+              </div>
 
-          <!-- Table -->
-          <div class="max-w-6xl mx-auto bg-white p-6">
-            <!-- Table Title -->
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">
-              Exporting Invoices Data
-            </h2>
-
-            <!-- Table -->
-            <div class="overflow-x-auto">
-              <table
-                id="suppliersTable"
-                class="stripe hover w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr
-                    class="font-semibold text-gray-700 border border-gray-200">
+              <!-- Table -->
+              <div class="w-full overflow-x-auto lg:overflow-x-visible">
+                <table
+                  id="categoriesTable"
+                  class="min-w-full px-1 text-sm text-left bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <thead>
+                    <tr class="font-semibold text-gray-700 border border-gray-200">
                     <th class="p-3 border border-gray-200">No</th>
                     <th class="p-3 border border-gray-200">Invoice no</th>
                     <th class="p-3 border border-gray-200">Customers</th>
                     <th class="p-3 border border-gray-200">Product</th>
                     <th class="p-3 border border-gray-200">Date</th>
                     <th class="p-3 border border-gray-200">Total Amount</th>
-                    
                     <th class="p-3 border border-gray-200">Paid Amount</th>
                     <th class="p-3 border border-gray-200">Remaining Amount</th>
-                    <th class="p-3 border border-gray-200">Option</th>
-                    
-                  </tr>
-                </thead>
-                <tbody>
+                      <% if (user.role === 'owner' || user.role === 'admin') { %>
+                        <th class="p-3">Action</th>
+                      <% } %>
+                    </tr>
+                  </thead>
+                  <tbody>
                   <% if (invoices.length > 0) { %>
                     <% invoices.forEach((invoice, index) => { %>
                         <tr class="border-t">
                           <td class="p-3 border border-gray-200"><%= index + 1 %></td>
                           <td class="p-3 border border-gray-200"><%= invoice.invoice_no %></td>
                           <td class="p-3 border border-gray-200"><%= invoice.customer_name %></td>
-                          <td class="p-3 border border-gray-200"><%= invoice.product %></td>
+                          
+                          <td class="p-3 border border-gray-200">
+                            <button type="button" onclick="toggleProducts('<%= invoice._id %>')" 
+                              class="text-blue-600 underline cursor-pointer">
+                              View Products (<%= invoice.items.length %>)
+                            </button>
+                            <div id="products-<%= invoice._id %>" style="display:none; margin-top:5px;">
+                              <% invoice.items.forEach(item => { %>
+                                <div><%= item.product_name %> (x<%= item.qty %>)</div>
+                              <% }); %>
+                            </div>
+                          </td>
                           <td class="p-3 border border-gray-200"><%= invoice.createdAt?.toDateString() || 'N/A' %></td>
                       
                         <td  class="p-3 border border-gray-200"><%= invoice.grand_total %></td>
@@ -69,20 +83,38 @@
                         </tr>
                       <% }) %>
                   <% } %>
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
+           <%- include ('../partials/footer') %>
         </main>
       </div>
     </div>
     <script>
       $(document).ready(function () {
-        $("#suppliersTable").DataTable({
+        $("#categoriesTable").DataTable({
+          responsive: true,
+          scrollX: true,
           dom: "Bfrtip",
           buttons: ["copy", "excel", "csv", "pdf", "print"],
+          language: {
+            searchPlaceholder: "Search invoice...",
+            search: "",
+          },
         });
       });
+    </script>
+    <script>
+      function toggleProducts(id) {
+        const el = document.getElementById('products-' + id);
+        if (el.style.display === 'none') {
+          el.style.display = 'block';
+        } else {
+          el.style.display = 'none';
+        }
+      }
     </script>
   </body>
 </html>

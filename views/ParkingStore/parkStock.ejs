@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../partials/head') %>
+
+    <body class="bg-slate-200 text-sm">
+        <div class="relative flex flex-col min-h-screen bg-slate-200">
+            <%- include ('../partials/header') %>
+
+                <div class="flex flex-row">
+                    <div class="lg:w-[220px] lg:p-4">
+                        <%- include ('../partials/sidebar') %>
+                    </div>
+                    <form action="/addParkingStock" method="post">
+                        <main class="relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200"
+                            style="width: 100%;">
+                            <div class="flex flex-row items-center md:flex-row justify-between gap-4 mb-6">
+                                <h2 id="pageHeading" class="text-2xl font-bold text-gray-800">Add Stock To Parking Store</h2>
+
+                                <div class="w-50 md:w-64">
+                                    <label for="branchSelector" class="block text-sm font-medium text-gray-700 mb-1">Your Branch</label>
+                                    <select id="branchSelector" name="branch"
+                                      class="w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                      <option value="<%= user.branch._id %>" selected>
+                                        <%= user.branch.branch_name %>
+                                      </option>
+                                    </select>
+                                  </div>
+                                  
+                            </div>
+
+
+                            <!-- Invoice Form -->
+                            <div class="bg-white rounded-xl shadow p-6 mb-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                                    <!-- Date -->
+                                  
+                                         <!-- Date -->
+                                    <div>
+                                        <label class="block font-medium text-gray-700 mb-1">
+                                        Date <span class="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                        type="date"
+                                        name="date"
+                                        id="payment_date"
+                                        style="border: none; outline: noney;"
+                                        />
+                                    </div>
+                                    <script>
+                                        const today = new Date().toISOString().split('T')[0];
+                                        document.getElementById('payment_date').value = today;
+                                    </script>
+
+                                    <!-- Parking Store -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Select Parking Store <span class="text-red-500">*</span>
+                                        </label>
+
+                                        <% if (parkingStores && parkingStores.length > 0) { %>
+                                            <select name="parkingStoreId" required
+                                            class="w-full border border-gray-300 rounded-md p-2 text-sm shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="" disabled selected>Select Parking Store</option>
+                                            <% parkingStores.forEach(store => { %>
+                                                <option value="<%= store._id %>">
+                                                <%= store.storeName %>
+                                                </option>
+                                            <% }) %>
+                                            </select>
+                                        <% } else { %>
+                                            <p class="text-red-500">No parking stores available for this branch.</p>
+                                        <% } %>
+                                    </div>
+
+                                    <div class="mb-6">
+                                    <label for="stockMode" class="block text-sm font-medium text-gray-700 mb-1">Select Action</label>
+                                    <select id="stockMode" name="mode"
+                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                        <option value="add" selected>Add Stock</option>
+                                        <option value="move">Move Out Stock</option>
+                                    </select>
+                                    </div>
+
+                                </div>
+
+
+
+                               
+                            </div>
+
+
+
+                            <!-- Table Inputs -->
+                       <div>
+    <h2 class="text-lg font-semibold text-gray-700 mb-2">Inventory & Supplier Info</h2>
+    <div class="overflow-x-auto">
+        <table id="variantTable" class="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
+            <thead class="bg-gray-100 text-gray-700">
+                <tr>
+                    <th class="p-2 border border-gray-200">Product</th>
+                    <th class="p-2 border border-gray-200">Unit Code</th>
+                    <th class="p-2 border border-gray-200">Supplier Price</th>
+                    <th class="p-2 border border-gray-200">Sell Price</th>
+                    <th class="p-2 border border-gray-200">InStock</th>
+                    <th class="p-2 border border-gray-200">QTY</th>
+                    <th class="p-2 border border-gray-200">Delete</th>
+                </tr>
+            </thead>
+            <tbody id="variantTableBody">
+                <tr class="text-gray-700 bg-white">
+                    <td class="p-2 border border-gray-200">
+                        <input type="text" autocomplete="off" id="searchProduct" placeholder="Search Product" class="searchProduct w-full border rounded px-2 py-1" />
+                        <div id="searchResults" class="mt-2 bg-white border border-gray-300 rounded-md shadow-md max-h-60 overflow-y-auto hidden absolute w-full"></div>
+                        <input type="hidden" name="product[]" class="productInput" />
+                        <input type="hidden" name="productId[]" class="productIdInput" />
+                    </td>
+                    <td class="p-2 border border-gray-200">
+                        <select name="unitCode[]" id="unitCode" class="unitCode w-full border rounded px-2 py-1 text-sm text-gray-700"></select>
+                    </td>
+                    <td class="p-2 border border-gray-200">
+                        <input type="number" id="supplierPrice" readonly name="supplierPrice[]" placeholder="Supplier Price" class="supplierPrice w-full border rounded px-2 py-1" />
+                    </td>
+                    <td class="p-2 border border-gray-200">
+                        <input type="number" id="sellPrice" readonly name="sellPrice[]" placeholder="Sell Price" class="sellPrice w-full border rounded px-2 py-1" />
+                    </td>
+                    <td class="p-2 border border-gray-200">
+                        <input type="number" id="inStock" disabled name="inStock[]" placeholder="In Stock" class="inStock w-full border rounded px-2 py-1" />
+                    </td>
+                    <td class="p-2 border border-gray-200">
+                        <input type="number" name="quantity[]" placeholder="Quantity" class="w-full border rounded px-2 py-1 qtyInput" />
+                    </td>
+                    <td class="p-2 border border-gray-200 text-center">
+                        <button type="button" class="deleteRowBtn text-red-600 hover:text-red-800">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 1rem;">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-md transition">
+            <i class="fa-solid fa-paper-plane"></i> Add
+        </button>
+    </div>
+
+<script>
+  let currentMode = 'add'; // default
+
+  document.getElementById('stockMode').addEventListener('change', function () {
+    currentMode = this.value;
+
+    document.querySelectorAll('#variantTableBody tr').forEach(row => {
+      row.querySelector('.searchProduct').value = '';
+      row.querySelector('.productInput').value = '';
+      row.querySelector('.productIdInput').value = '';
+      row.querySelector('.unitCode').innerHTML = '';
+      row.querySelector('.supplierPrice').value = '';
+      row.querySelector('.sellPrice').value = '';
+      row.querySelector('.inStock').value = '';
+    });
+  });
+</script>
+
+<script>
+  let selectedProductGlobal = null;
+
+  function initializeSearch(row) {
+    const searchInput = row.querySelector('.searchProduct');
+    const searchResults = row.querySelector('#searchResults');
+    const branchSelector = document.getElementById('branchSelector');
+    const unitCodeSelect = row.querySelector('.unitCode');
+    const supplierPriceInput = row.querySelector('.supplierPrice');
+    const sellPriceInput = row.querySelector('.sellPrice');
+    const inStockInput = row.querySelector('.inStock');
+
+    searchInput.addEventListener('input', function () {
+      const query = this.value.trim();
+      const branchId = branchSelector ? branchSelector.value : null;
+
+      if (query.length < 1 || !branchId) {
+        searchResults.classList.add('hidden');
+        return;
+      }
+
+      const searchUrl =
+        currentMode === 'move'
+          ? `/searchParkingStock?query=${encodeURIComponent(query)}&branchId=${branchId}`
+          : `/searchProduct?query=${encodeURIComponent(query)}&branchId=${branchId}`;
+
+      fetch(searchUrl)
+        .then(res => res.json())
+        .then(data => {
+          const products = data.products;
+
+          if (!products || products.length === 0) {
+            searchResults.classList.add('hidden');
+            searchResults.innerHTML = '';
+            return;
+          }
+
+          searchResults.innerHTML = '';
+
+          products.forEach(product => {
+            const displayName = currentMode === 'move'
+                ? `${product.product?.product || 'Unnamed Product'} - ${product.unitCode || ''}`
+                : `${product.product} - ${product.product_detail || ''}`;
+
+
+            const item = document.createElement('div');
+            item.textContent = displayName;
+            item.className = "p-2 hover:bg-green-100 cursor-pointer";
+
+            item.addEventListener('click', () => {
+              selectedProductGlobal = product;
+
+              const name = currentMode === 'move'
+                ? product.product?.product
+                : product.product;
+
+              const productId = currentMode === 'move'
+                ? product.product?._id
+                : product._id;
+
+              searchInput.value = name || '';
+              searchResults.classList.add('hidden');
+
+              const productInput = row.querySelector('.productInput');
+              const productIdInput = row.querySelector('.productIdInput');
+
+              if (productInput && productIdInput) {
+                productInput.value = name || '';
+                productIdInput.value = productId || '';
+              }
+
+              unitCodeSelect.innerHTML = '';
+              const unitOption = document.createElement('option');
+
+              if (currentMode === 'move') {
+                unitOption.value = product.unitCode;
+                unitOption.textContent = `${product.unitCode} - In stock: ${product.quantity}`;
+                unitCodeSelect.appendChild(unitOption);
+
+                supplierPriceInput.value = '';
+                sellPriceInput.value = '';
+                inStockInput.value = product.quantity;
+              } else {
+                if (product.variants && product.variants.length > 0) {
+                  const firstVariant = product.variants[0];
+                  unitOption.value = firstVariant.unitCode;
+                  unitOption.textContent = `${firstVariant.unitCode} - In stock: ${firstVariant.quantity}`;
+                  unitCodeSelect.appendChild(unitOption);
+
+                  supplierPriceInput.value = product.supplierPrice;
+                  sellPriceInput.value = firstVariant.sellPrice;
+                  inStockInput.value = firstVariant.quantity;
+                  row.dataset.variantId = firstVariant._id;
+                } else {
+                  supplierPriceInput.value = '';
+                  sellPriceInput.value = '';
+                  inStockInput.value = '';
+                }
+              }
+            });
+
+            searchResults.appendChild(item);
+          });
+
+          searchResults.classList.remove('hidden');
+        })
+        .catch(err => {
+          console.error('Search failed', err);
+        });
+    });
+  }
+
+  function attachDeleteEvent(row) {
+    const deleteBtn = row.querySelector('.deleteRowBtn');
+    deleteBtn?.addEventListener('click', () => {
+      const tbody = document.getElementById('variantTableBody');
+      if (tbody.rows.length > 1) {
+        row.remove();
+      } else {
+        alert('At least one row must remain.');
+      }
+    });
+  }
+
+  function attachQtyEvent(row) {
+    const qtyInput = row.querySelector('.qtyInput');
+    qtyInput?.addEventListener('input', () => {
+      const tbody = document.getElementById('variantTableBody');
+      const isLastRow = row === tbody.lastElementChild;
+
+      if (qtyInput.value && isLastRow) {
+        const newRow = row.cloneNode(true);
+
+        newRow.querySelector('.searchProduct').value = '';
+        newRow.querySelector('.productInput').value = '';
+        newRow.querySelector('.productIdInput').value = '';
+        newRow.querySelector('.unitCode').innerHTML = '';
+        newRow.querySelector('.supplierPrice').value = '';
+        newRow.querySelector('.sellPrice').value = '';
+        newRow.querySelector('.inStock').value = '';
+        newRow.querySelector('.qtyInput').value = '';
+        newRow.querySelector('#searchResults').innerHTML = '';
+        newRow.querySelector('#searchResults').classList.add('hidden');
+        delete newRow.dataset.variantId;
+
+        tbody.appendChild(newRow);
+
+        initializeSearch(newRow);
+        attachDeleteEvent(newRow);
+        attachQtyEvent(newRow);
+      }
+    });
+  }
+
+  const firstRow = document.querySelector('#variantTableBody tr');
+  initializeSearch(firstRow);
+  attachDeleteEvent(firstRow);
+  attachQtyEvent(firstRow);
+</script>
+
+
+
+
+
+</div>
+
+
+                            
+                            
+                    
+        
+
+                            <!-- Product List (Suggestions) -->
+                            <ul id="productList" class="absolute bg-white border rounded-md mt-1 w-full hidden">
+                                <!-- Matching products will be displayed here -->
+                            </ul>
+
+                            <!-- Product Details Section -->
+                            <div id="productDetails" class="mt-4">
+                                <!-- Product details will be populated here -->
+                            </div>
+
+                          
+
+                            <style>
+                                #productList {
+                                    position: absolute;
+                                    max-height: 150px;
+                                    overflow-y: auto;
+                                    width: 100%;
+                                    z-index: 1000;
+                                }
+
+                                #productList li:hover {
+                                    background-color: #f0f0f0;
+                                }
+                            </style>
+
+                    
+
+                            
+                            <%- include ('../partials/footer') %>
+                        </main>
+                    </form>
+                    <script>
+                        document.getElementById('stockMode').addEventListener('change', function () {
+                            const heading = document.getElementById('pageHeading');
+                            const form = document.querySelector('form');
+                            const submitButton = form.querySelector('button[type="submit"]');
+
+                            if (this.value === 'move') {
+                            heading.textContent = 'Move Stock From Parking Store';
+                            form.action = '/moveOutParkingStock';
+                            submitButton.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Move';
+                            } else {
+                            heading.textContent = 'Add Stock To Parking Store';
+                            form.action = '/addParkingStock';
+                            submitButton.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Add';
+                            }
+                        });
+                    </script>
+
+                </div>
+        </div>
+
+
+
+    </body>
+
+</html>

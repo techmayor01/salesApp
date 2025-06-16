@@ -13,6 +13,8 @@ const Customer = require('../model/Customer');
 const StockTransfer = require('../model/transferStock');
 const Loan = require('../model/Loan');
 const ReceivedStock = require('../model/ReceivedStock');
+const ParkingStock = require('../model/ParkingStock'); // Import ParkingStock model
+const ParkingStore = require('../model/ParkingStore'); // Import ParkingStore model
 
 
 // RECEIVE STOCK QUERY 
@@ -217,6 +219,33 @@ router.get('/api/searchLoaners', async (req, res) => {
     res.status(500).json({ message: "Server error" }); // ✅ safe error response
   }
 });
+
+
+// PARKING STOCK QUERY
+// routes.js or controller.js
+router.get('/searchParkingStock', async (req, res) => {
+  const { query, branchId } = req.query;
+
+  try {
+    const stock = await ParkingStock.find({
+      branch: branchId,
+    })
+      .populate({
+        path: 'product',
+        select: 'product' // Only need the product name
+      });
+
+    const filtered = stock.filter(item =>
+      item.product?.product?.toLowerCase().includes(query.toLowerCase())
+    );
+
+    res.json({ products: filtered });
+  } catch (err) {
+    console.error("Search Error:", err);
+    res.status(500).json({ error: "Search failed" });
+  }
+});
+
 
 
 module.exports = router;

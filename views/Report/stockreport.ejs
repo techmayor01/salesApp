@@ -20,78 +20,173 @@
           </div>
 
           <!-- Filters Section -->
-          <div
-            id="creditorsFilterBlock"
-            class="mb-6 flex flex-wrap items-center gap-4 text-sm">
-            <input
-              type="text"
-              id="creditorInput"
-              placeholder="Enter Stock Name"
-              class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+          <div id="creditorsFilterBlock" class="mb-6 flex flex-wrap items-center gap-4 text-sm">
+<form method="GET" action="/stock-report" class="mb-6 flex flex-wrap items-center gap-4 text-sm bg-white p-4 rounded-lg shadow-md">
+  <input type="hidden" name="productId" id="productId" />
 
-            <p class="font-semibold text-gray-700">Date Range</p>
-            <input
-              type="date"
-              id="startDate"
-              class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+  <input
+    style="height: 40px; outline: none;"
+    type="text"
+    id="stockInput"
+    placeholder="Enter Stock Name"
+    class="input-field"
+    autocomplete="off"
+  />
 
-            <span class="text-gray-500">to</span>
-            <input
-              type="date"
-              id="endDate"
-              class="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+  <ul id="suggestionsList" class="absolute bg-white border border-gray-200 shadow-md z-50 w-60 mt-1 hidden rounded-md"></ul>
 
-            <button
-              id="getCreditorsBtn"
-              class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
-              Get
-            </button>
+  <p class="font-semibold text-gray-700">Date Range</p>
+
+  <input type="date" name="startDate" id="startDate" class="input-field" />
+  <span class="text-gray-500">to</span>
+  <input type="date" name="endDate" id="endDate" class="input-field" />
+
+  <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+    Get
+  </button>
+</form>
+
+<script>
+  const stockInput = document.getElementById("stockInput");
+  const productIdInput = document.getElementById("productId");
+  const suggestionsList = document.getElementById("suggestionsList");
+
+  stockInput.addEventListener("input", function () {
+    const query = this.value.trim();
+    if (!query) {
+      suggestionsList.innerHTML = "";
+      suggestionsList.classList.add("hidden");
+      return;
+    }
+
+    fetch(`/search-stockReport?q=${encodeURIComponent(query)}`)
+      .then(res => res.json())
+      .then(products => {
+        suggestionsList.innerHTML = "";
+        if (products.length === 0) {
+          suggestionsList.classList.add("hidden");
+          return;
+        }
+
+        products.forEach(product => {
+          const li = document.createElement("li");
+          li.textContent = product.product; // changed from product.name
+          li.dataset.id = product._id;
+          li.className = "px-4 py-2 hover:bg-blue-100 cursor-pointer";
+
+          li.addEventListener("click", () => {
+            stockInput.value = product.product; // changed from product.name
+            productIdInput.value = product._id;
+            suggestionsList.classList.add("hidden");
+          });
+
+          suggestionsList.appendChild(li);
+        });
+
+        suggestionsList.classList.remove("hidden");
+      })
+      .catch(err => {
+        console.error("Autocomplete error:", err);
+        suggestionsList.classList.add("hidden");
+      });
+  });
+
+  // Optional: hide suggestions if clicked outside
+  document.addEventListener("click", function (e) {
+    if (!suggestionsList.contains(e.target) && e.target !== stockInput) {
+      suggestionsList.classList.add("hidden");
+    }
+  });
+</script>
+
+
           </div>
 
           <!-- Creditors Table -->
-          <div
+          <div style="padding: 15px;"
             id="creditorsTableSection"
-            class="hidden max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-md">
+            class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-md">
             <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">
               Stock Ledger
             </h2>
             <div class="overflow-x-auto">
               <table
-                id="stockTable"
+                id="creditorsTable"
                 class="min-w-full divide-y divide-gray-200 text-sm">
                 <thead
                   class="bg-blue-50 text-blue-700">
                   <tr>
                     <th class="px-4 py-3 text-left">Date</th>
                     <th class="px-4 py-3 text-left">Product</th>
-                    <th class="px-4 py-3 text-left">Unit</th>
-                    <th class="px-4 py-3 text-right">Opening Stock</th>
-                    <th class="px-4 py-3 text-right">Received</th>
-                    <th class="px-4 py-3 text-right">Issued</th>
-                    <th class="px-4 py-3 text-right">Closing Stock</th>
-                    <th class="px-4 py-3 text-left">Operator</th>
-                    <th class="px-4 py-3 text-left">Remarks</th>
+                    <th class="px-4 py-3 text-left">Stock In</th>
+                    <th class="px-4 py-3 text-right">Stock Out</th>
+                    <th class="px-4 py-3 text-right">
+                      Balance
+                      <span class="text-xs text-gray-500">(Select Unit)</span>  
+                    </th>
+
+                    <th class="px-4 py-3 text-right">Operator</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 text-gray-700">
-                  <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3">10th May 2024</td>
-                    <td class="px-4 py-3">Indomie</td>
-                    <td class="px-4 py-3">Carton</td>
-                    <td class="px-4 py-3 text-right">150</td>
-                    <td class="px-4 py-3 text-right">50</td>
-                    <td class="px-4 py-3 text-right">30</td>
-                    <td class="px-4 py-3 text-right">170</td>
-                    <td class="px-4 py-3">Edison</td>
-                    <td class="px-4 py-3">Restocked from main warehouse</td>
-                  </tr>
+                  <% if (typeof stockLedgers !== "undefined" && stockLedgers.length > 0) { %>
+                    <% stockLedgers.forEach((entry, index) => {
+                      const firstVariant = entry.variants[0];
+                    %>
+                      <tr class="hover:bg-gray-50 transition-colors" data-index="<%= index %>">
+                        <td class="px-4 py-3"><%= new Date(entry.date).toLocaleDateString() %></td>
+                        <td class="px-4 py-3"><%= entry.product?.product || "N/A" %></td>
+                        <td class="px-4 py-3"><%= firstVariant.stock_in %></td>
+                        <td class="px-4 py-3 text-left"><%= firstVariant.stock_out %></td>
+                        <td class="px-4 py-3 text-left">
+                          <span class="balance-display" id="balance-<%= index %>"><%= firstVariant.balance %></span>
+                          <select class="unit-select ml-2 px-2 py-1 text-sm"
+                                  data-index="<%= index %>"
+                                  data-variants='<%- JSON.stringify(entry.variants) %>'>
+                            <% entry.variants.forEach(v => { %>
+                              <option value="<%= v.unitCode %>"><%= v.unitCode %></option>
+                            <% }) %>
+                          </select>
+                        </td>
+                        <td class="px-4 py-3 text-left"><%= entry.operator?.fullname || "Operator" %></td>
+                      </tr>
+                    <% }) %>
+                  <% } else if (typeof stockLedgers !== "undefined") { %>
+                    <tr>
+                      <td colspan="6" class="text-center py-4 text-gray-500 italic">No records found for the selected product and date range.</td>
+                    </tr>
+                  <% } %>
                 </tbody>
+
+
               </table>
+              <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".unit-select").forEach(select => {
+      select.addEventListener("change", function () {
+        const index = this.dataset.index;
+        const variants = JSON.parse(this.dataset.variants);
+        const selectedUnit = this.value;
+
+        const matchedVariant = variants.find(v => v.unitCode === selectedUnit);
+        const balanceDisplay = document.getElementById(`balance-${index}`);
+
+        if (matchedVariant) {
+          balanceDisplay.textContent = matchedVariant.balance;
+        } else {
+          balanceDisplay.textContent = "0";
+        }
+      });
+    });
+  });
+</script>
+
             </div>
           </div>
         </main>
       </div>
     </div>
+    <%- include ('../partials/footer') %>
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
@@ -102,6 +197,20 @@
           tableSection.classList.remove("hidden");
         });
       });
+    </script>
+        <script>
+      $(document).ready(function () {
+          $("#creditorsTable").DataTable({
+            responsive: true,
+            scrollX: false,
+            dom: "Bfrtip",
+            buttons: ["copy", "excel", "csv", "pdf", "print"],
+            language: {
+              searchPlaceholder: "Search invoice...",
+              search: "",
+            },
+          });
+        });
     </script>
   </body>
 </html>

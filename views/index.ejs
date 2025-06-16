@@ -5,10 +5,10 @@
   <%- include ('partials/head') %>
   <body class="">
     <div class="relative flex flex-col min-h-screen bg-slate-200">
-      <%- include ('partials/header') %>
-      <div class="flex flex-row">
-        <div class="lg:w-[220px] lg:p-4"><%- include ('partials/sidebar') %></div>
-        <main
+      <%- include ('partials/das') %>
+      <div class="flex flex-row" style="display: flex;">
+        <div style="width: 18%;"><%- include ('partials/sidebar') %></div>
+        <main style="width: 90%;"
           class=" relative top-16 p-4 overflow-auto lg:w-[calc(100%-220px)] w-full bg-slate-200"
           >
 
@@ -70,20 +70,32 @@
             <% } %>
           </p>
 
-          <script>
-            const reportSelect = document.getElementById("reportSelect");
-            const summaryTitle = document.getElementById("summaryTitle");
+ <script>
+  const reportSelect = document.getElementById("reportSelect");
+  const summaryTitle = document.getElementById("summaryTitle");
 
-            // Set dropdown initial value from server
-            <% if (typeof rangeLabel !== 'undefined') { %>
-              reportSelect.value = "<%= rangeLabel %>";
-            <% } %>
+  // Set dropdown initial value from server
+  <% if (typeof rangeLabel !== 'undefined') { %>
+    reportSelect.value = "<%= rangeLabel %>";
+  <% } %>
 
-            reportSelect.addEventListener("change", function() {
-              const selectedRange = reportSelect.value;
-              window.location.href = `/dashboard?range=${selectedRange}`;
-            });
-          </script>
+  reportSelect.addEventListener("change", function () {
+    const selectedRange = reportSelect.value;
+
+    // Get current branchId from the URL (if any)
+    const urlParams = new URLSearchParams(window.location.search);
+    const branchId = urlParams.get("branchId");
+
+    // Rebuild the URL with both range and branchId
+    let newUrl = `/dashboard?range=${selectedRange}`;
+    if (branchId) {
+      newUrl += `&branchId=${branchId}`;
+    }
+
+    window.location.href = newUrl;
+  });
+</script>
+
 
 
 
@@ -339,10 +351,10 @@
 
 
           
+<%- include ('partials/footer') %>
         </main>
       </div>
     </div>
-    <%- include ('partials/footer') %>
     
 
   </body>

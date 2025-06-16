@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ajelieli and Sons Limited (Receipt)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      .print-section, .print-section * {
+        visibility: visible !important;
+      }
+      .print-section {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white;
+        padding: 10px;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    /* Popup animation */
+    .popup-bg {
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 50;
+    }
+    .popup-bg.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .popup-content {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 320px;
+      width: 90vw;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      transform: translateY(20px);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .popup-bg.active .popup-content {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-4 flex flex-col items-center min-h-screen">
+
+
+
+  <!-- Popup with buttons -->
+  <div id="popup" class="popup-bg active" aria-hidden="false" >
+    <div class="popup-content flex flex-col gap-4 items-center">
+      <div class="flex flex-col gap-4 items-center">
+        <h2 class="text-lg font-semibold">Select Print Option</h2>
+        <p class="text-sm text-gray-600">Choose the type of receipt you want to print.</p>
+      </div>
+      <button onclick="printSection('normal')" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 w-full">
+        Print Normal
+      </button>
+      <button onclick="printSection('thermal')" class="bg-gray-800 text-white px-6 py-2 rounded hover:bg-black w-full">
+        Print Thermal
+      </button>
+      <a href="/transactionHistory" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 w-full" style="text-align: center;">
+        Close
+      </a>
+    </div>
+  </div>
+
+  <!-- Normal Receipt -->
+  <div id="normal" class="print-section hidden w-full flex justify-center">
+    <div class="bg-white p-4 shadow-lg w-full max-w-3xl">
+      <div class="text-center border-b pb-4 mb-4">
+        <img src="../media/icons/logo.png" alt="" width="100%">
+        <p class="text-sm" style="text-transform: uppercase;"><%= receipt.transactionType %> PAYMENT</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 text-sm mb-2">
+      <% if (isHeadOffice) { %>
+          <div>
+            <h2 class="font-semibold">HEAD OFFICE:</h2>
+            <p><%= branch.branch_address %></p>
+            <p><%= branch.branch_phone %></p>
+          </div>
+        <% } else { %>
+          <div>
+            <h2 class="font-semibold">HEAD OFFICE:</h2>
+            <p><%= headOffice.branch_address %></p>
+            <p><%= headOffice.branch_phone %></p>
+          </div>
+
+          <div class="mt-4">
+            <h2 class="font-semibold">BRANCH OFFICE:</h2>
+            <p><%= branch.branch_address %></p>
+            <p><%= branch.branch_phone %></p>
+          </div>
+        <% } %>
+
+      </div>
+
+      <div class="grid grid-cols-2 text-sm mb-4 border-t border-b py-2">
+        <p><strong>Customer:</strong> <%= customerOrLoan.customer_name %></p>
+        <div><strong>Date:</strong> <%= new Date(receipt.paymentDate).toLocaleDateString() %></div>
+        <div><strong>Invoice #:</strong> <%= receipt.receiptNo %></div>
+      </div>
+
+ 
+
+      <div class="text-sm mb-2">
+        <div class="flex justify-between font-bold">
+          <span>Purpose</span>
+        </div>
+          <p class="font-semibold"><%= receipt.reference %></p>
+      </div>
+
+      <div class="text-sm border-t border-b py-2 mb-2">
+        <div class="flex justify-between"><span>Amount Paid:</span><span>₦<%= receipt.amountReceived.toLocaleString() %></span></div>
+        <div class="flex justify-between"><span>Balance:</span><span>₦<%= receipt.balanceRemaining.toLocaleString() %></span></div>
+        <p class="italic font-semibold">Amount Words: <%= totalInWords %> Naira, Only.</p>
+      </div>
+
+      <div class="grid grid-cols-2 text-sm mt-4">
+        <p class="border-t pt-2 w-40 text-center">Customer's Sign</p>
+        <p class="border-t pt-2 w-40 text-center">Manager's Sign</p>
+      </div>
+      <p class="text-center text-sm mt-2">Operator: <%= receipt.createdBy?.fullname || 'Staff' %> | Time: <%= new Date(receipt.createdAt).toLocaleTimeString() %></p>
+    </div>
+  </div>
+
+  <!-- Thermal Receipt -->
+  <div id="thermal" class="print-section hidden w-full flex justify-center">
+    <div class="receipt w-[58mm] text-[10px] font-mono leading-tight text-black bg-white p-2">
+      <img src="../media/icons/logo.png" alt="" width="100%">
+    <% if (isHeadOffice) { %>
+      <!-- Head Office Only -->
+      <div class="text-center mb-2 mt-2">
+        <%= branch.branch_address %><br/>
+        <%= branch.branch_phone %>
+      </div>
+    <% } else { %>
+      <!-- Head Office -->
+      <div class="text-center mb-2">
+        <%= headOffice.branch_address %><br/>
+        <%= headOffice.branch_phone %>
+      </div>
+
+      <!-- Branch Office -->
+      <div class="text-center mb-2 border-t border-dashed pt-1">
+        BRANCH: <%= branch.branch_address %><br/>
+        <%= branch.branch_phone %>
+      </div>
+    <% } %>
+
+      <div class="mb-1 border-t border-dashed pt-1">
+        Name: <%= customerOrLoan.customer_name %><br/>
+        Date: <%= new Date(receipt.paymentDate).toLocaleDateString() %><br/>
+        Invoice #: <%= receipt.receiptNo %>
+      </div>
+      
+      <div class="border-t border-dashed pt-1 mt-1">
+        <div class="flex justify-between">
+          <span>Purpose</span>
+        </div>
+        <div class="text-xs italic mt-1 mb-4">
+          <%= receipt.reference %>
+        </div>
+      </div>
+      <div class="mt-1">
+        <div class="flex justify-between"><span>Amount Paid</span><span>₦<%= receipt.amountReceived.toLocaleString() %></span></div>
+        <div class="flex justify-between"><span>Balance Amount:</span><span>₦<%= receipt.balanceRemaining.toLocaleString() %></span></div>
+        <p>Amt in Words: <%= totalInWords %> Naira, Only.</p>
+      </div>
+      <div class="flex justify-between text-xs mt-2">
+        <div class="text-center border-t w-24">Customer</div>
+        <div class="text-center border-t w-24">Manager</div>
+      </div>
+      <div class="text-center mt-1">
+        <%= receipt.createdBy?.fullname || 'Staff' %><br/>
+        <%= new Date(receipt.createdAt).toLocaleTimeString() %>
+      </div>
+      <div class="text-center text-xs mt-2">
+        Thank you for your purchase!
+      </div>
+    </div>
+  </div>
+
+  <!-- Script -->
+<script>
+  const popup = document.getElementById('popup');
+
+  function closePopup() {
+    popup.classList.remove('active');
+    popup.setAttribute('aria-hidden', 'true');
+  }
+
+  function openPopup() {
+    popup.classList.add('active');
+    popup.setAttribute('aria-hidden', 'false');
+  }
+
+  function printSection(id) {
+    // Hide popup before printing
+    closePopup();
+
+    const normal = document.getElementById('normal');
+    const thermal = document.getElementById('thermal');
+    const sectionToPrint = document.getElementById(id);
+
+    // Hide all receipts
+    normal.style.display = 'none';
+    thermal.style.display = 'none';
+
+    // Show chosen receipt
+    sectionToPrint.style.display = 'flex';
+
+    // After print or cancel, hide receipts and show popup again
+    window.onafterprint = () => {
+      normal.style.display = 'none';
+      thermal.style.display = 'none';
+      openPopup();
+    };
+
+    window.print();
+  }
+</script>
+
+
+</body>
+</html>

@@ -1,9 +1,7 @@
 <!-- @format -->
 
-<aside
-id="sidebar"
-  class="w-[220px] fixed top-16 left-0 h-full pt-6 bg-gradient-to-b from-white to-gray-100 border-r border-gray overflow-y-scroll sidebar-scrollbar   transition-transform duration-300 transform -translate-x-full lg:translate-x-0 z-30 lg:z-0">
-  
+<aside style="background-color: white; position: fixed; overflow-y: scroll; top: 9%; left: 0; height: 540px; padding: 20px 0px;"
+id="sidebar">  
   <ul class="flex flex-col px-2 space-y-1 text-sm font-medium text-gray-700">
     <li>
       <a href="/dashboard" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
@@ -63,6 +61,22 @@ id="sidebar"
         </ul>
       </li>
 
+      <!-- PARKING STORE  -->
+      <li class="">
+        <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+          <div class="flex items-center space-x-3  text-gray-700">
+            <i class="fas fa-warehouse text-blue-600"></i>
+            <span>Parking Store</span>
+          </div>
+          <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+        </button>
+        <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
+          <li><a href="/AddparkingStore" class="block py-1 hover:text-blue-600">Add Parking Store</a></li>
+          <li><a href="/parkStock" class="block py-1 hover:text-blue-600">Add Stock</a></li>
+          <li><a href="/manageParkingStore" class="block py-1 hover:text-blue-600">Manage Store</a></li>
+        </ul>
+      </li>
+
       <li class="">
         <button onclick="toggleDropdown(this)" class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors">
           <div class="flex items-center space-x-3  text-gray-700">
@@ -108,7 +122,7 @@ id="sidebar"
           <li><a href="/addProduct" class="block py-1 hover:text-blue-600">Add Stock</a></li>
           <li><a href="/manageProduct" class="block py-1 hover:text-blue-600">Manage Stock</a></li>
           <li><a href="/stockTransfer" class="block py-1 hover:text-blue-600">Stock Transfer</a></li>
-          <!-- <li><a href="/adjustStock" class="block py-1 hover:text-blue-600">Adjust Stock</a></li> -->
+          <li><a href="/adjustStock" class="block py-1 hover:text-blue-600">Adjust Price</a></li>
         </ul>
       </li>
     <!--Expired Product -->
@@ -153,8 +167,8 @@ id="sidebar"
         <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
           <li><a href="/addCustomers" class="block py-1 hover:text-blue-600">Add Customer</a></li>
           <li><a href="/manageCustomers" class="block py-1 hover:text-blue-600">Manage Customer</a></li>
-          <li><a href="/creditCustomers" class="block py-1 hover:text-blue-600">Credit Customer</a></li>
-          <li><a href="/paidCustomers" class="block py-1 hover:text-blue-600">Cash Customer</a></li>
+          <li><a href="/creditCustomers" class="block py-1 hover:text-blue-600">Current Debtors</a></li>
+          <!-- <li><a href="/paidCustomers" class="block py-1 hover:text-blue-600">Cash Customer</a></li> -->
         </ul>
       </li>
        <!-- Transaction -->
@@ -184,8 +198,6 @@ id="sidebar"
         <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
           <li><a href="/addInvoice" class="block py-1 hover:text-blue-600">Add Invoice</a></li>
           <li><a href="/manageInvoice" class="block py-1 hover:text-blue-600">Manage Invoice</a></li>
-          <li><a href="/Invoice/paidInvoice" class="block py-1 hover:text-blue-600">Paid Invoice</a></li>
-          <li><a href="/Invoice/unpaidInvoice" class="block py-1 hover:text-blue-600">Unpaid Invoice</a></li>
           
         </ul>
       </li>
@@ -257,11 +269,11 @@ id="sidebar"
       <ul class="hidden pl-8 py-1 space-y-1 text-sm text-gray-600">
         <li><a href="/Report/profit_loss" class="block py-1 hover:text-blue-600"> Profit/Loss Ledger</a></li>
         <li><a href="/Report/salesLedger" class="block py-1 hover:text-blue-600">Sales Report</a></li>
-        <li><a href="/purchase-report" class="block py-1 hover:text-blue-600">Purchase Report</a></li>
+        <!-- <li><a href="/purchase-report" class="block py-1 hover:text-blue-600">Purchase Report</a></li> -->
         <li><a href="/stock-report" class="block py-1 hover:text-blue-600">Stock Report</a></li>
-        <li><a href="/creditors-report" class="block py-1 hover:text-blue-600">Creditors Report</a></li>
+        <li><a href="/supplierInvoice-report" class="block py-1 hover:text-blue-600">Supplier Ledger</a></li>
         <li><a href="/debitor-report" class="block py-1 hover:text-blue-600">Debitors Report</a></li>
-        <li><a href="/stocktransfer-report" class="block py-1 hover:text-blue-600">Stocktransfer Report</a></li>
+        <!-- <li><a href="/stocktransfer-report" class="block py-1 hover:text-blue-600">Stocktransfer Report</a></li> -->
         <li><a href="/Report/expenseLedger" class="block py-1 hover:text-blue-600">Expense Ledger</a></li>
       </ul>
     </li>

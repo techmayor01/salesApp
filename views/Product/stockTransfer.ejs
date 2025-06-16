@@ -53,7 +53,7 @@
 
                                     <!-- Branch -->
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Transfer To <span
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Transfer From <span
                                             class="text-red-500">*</span></label>
                                         <% if (branches && branches.length> 0) { %>
                                         <select name="to_branch"
@@ -74,7 +74,7 @@
                                      <div>
                                         <label class="block font-medium text-gray-700 mb-1">Transaction
                                             Number</label>
-                                        <input type="text" name="transaction_number" placeholder="Enter manually"
+                                        <input type="text" autocomplete="off" name="transaction_number" placeholder="Enter manually"
                                             class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-300 px-3 py-2" />
                                     </div>
 
@@ -96,7 +96,7 @@
 
 
                             <!-- Table Inputs -->
-                           <div>
+                       <div>
     <h2 class="text-lg font-semibold text-gray-700 mb-2">Inventory & Supplier Info</h2>
     <div class="overflow-x-auto">
         <table id="variantTable" class="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
@@ -108,177 +108,187 @@
                     <th class="p-2 border border-gray-200">Sell Price</th>
                     <th class="p-2 border border-gray-200">InStock</th>
                     <th class="p-2 border border-gray-200">QTY</th>
+                    <th class="p-2 border border-gray-200">Delete</th>
                 </tr>
             </thead>
             <tbody id="variantTableBody">
                 <tr class="text-gray-700 bg-white">
                     <td class="p-2 border border-gray-200">
-                        <input type="text" id="searchProduct" placeholder="Search Product" class="w-full border rounded px-2 py-1" />
+                        <input type="text" autocomplete="off" id="searchProduct" placeholder="Search Product" class="searchProduct w-full border rounded px-2 py-1" />
                         <div id="searchResults" class="mt-2 bg-white border border-gray-300 rounded-md shadow-md max-h-60 overflow-y-auto hidden absolute w-full"></div>
-                        <!-- Added hidden inputs here -->
                         <input type="hidden" name="product[]" class="productInput" />
                         <input type="hidden" name="productId[]" class="productIdInput" />
                     </td>
                     <td class="p-2 border border-gray-200">
-                        <select name="unitCode[]" id="unitCode" class="w-full border rounded px-2 py-1 text-sm text-gray-700"></select>
+                        <select name="unitCode[]" id="unitCode" class="unitCode w-full border rounded px-2 py-1 text-sm text-gray-700"></select>
                     </td>
                     <td class="p-2 border border-gray-200">
-                        <input type="number" id="supplierPrice" readonly name="supplierPrice[]" placeholder="Supplier Price" class="w-full border rounded px-2 py-1" />
+                        <input type="number" id="supplierPrice" readonly name="supplierPrice[]" placeholder="Supplier Price" class="supplierPrice w-full border rounded px-2 py-1" />
                     </td>
                     <td class="p-2 border border-gray-200">
-                        <input type="number" id="sellPrice" readonly name="sellPrice[]" placeholder="Sell Price" class="w-full border rounded px-2 py-1" />
+                        <input type="number" id="sellPrice" readonly name="sellPrice[]" placeholder="Sell Price" class="sellPrice w-full border rounded px-2 py-1" />
                     </td>
                     <td class="p-2 border border-gray-200">
-                        <input type="number" id="inStock" disabled name="inStock[]" placeholder="In Stock" class="w-full border rounded px-2 py-1" />
+                        <input type="number" id="inStock" disabled name="inStock[]" placeholder="In Stock" class="inStock w-full border rounded px-2 py-1" />
                     </td>
                     <td class="p-2 border border-gray-200">
-                        <input type="number" name="quantity[]" placeholder="Quantity" class="w-full border rounded px-2 py-1" />
+                        <input type="number" name="quantity[]" placeholder="Quantity" class="w-full border rounded px-2 py-1 qtyInput" />
+                    </td>
+                    <td class="p-2 border border-gray-200 text-center">
+                        <button type="button" class="deleteRowBtn text-red-600 hover:text-red-800">
+                            <i class="fa fa-trash"></i>
+                        </button>
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <!-- Buttons -->
-    <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
-        <button type="button" id="addVariantBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-md transition">
-            <i class="fa-solid fa-plus"></i> Add Product
-        </button>
-
+    <div style="margin-top: 1rem;">
         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-md transition">
             <i class="fa-solid fa-paper-plane"></i> Transfer
         </button>
     </div>
 
-    <script>
-        let selectedProductGlobal = null;
+<script>
+  let selectedProductGlobal = null;
 
-        function initializeSearch(row) {
-            const searchInput = row.querySelector('#searchProduct');
-            const searchResults = row.querySelector('#searchResults');
-            const branchSelector = document.getElementById('branchSelector');
-            const unitCodeSelect = row.querySelector('#unitCode');
-            const supplierPriceInput = row.querySelector('#supplierPrice');
-            const sellPriceInput = row.querySelector('#sellPrice');
-            const inStockInput = row.querySelector('#inStock');
+  function initializeSearch(row) {
+    const searchInput = row.querySelector('.searchProduct');
+    const searchResults = row.querySelector('#searchResults');
+    const branchSelector = document.getElementById('branchSelector');
+    const unitCodeSelect = row.querySelector('.unitCode');
+    const supplierPriceInput = row.querySelector('.supplierPrice');
+    const sellPriceInput = row.querySelector('.sellPrice');
+    const inStockInput = row.querySelector('.inStock');
 
-            searchInput.addEventListener('input', function () {
-                const query = this.value.trim();
-                const branchId = branchSelector ? branchSelector.value : null;
+    searchInput.addEventListener('input', function () {
+      const query = this.value.trim();
+      const branchId = branchSelector ? branchSelector.value : null;
 
-                if (query.length < 3 || !branchId) {
-                    searchResults.classList.add('hidden');
-                    return;
-                }
+      if (query.length < 1 || !branchId) {
+        searchResults.classList.add('hidden');
+        return;
+      }
 
-                fetch(`/searchProduct?query=${encodeURIComponent(query)}&branchId=${branchId}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        const product = data.product;
+      fetch(`/searchProduct?query=${encodeURIComponent(query)}&branchId=${branchId}`)
+        .then(res => res.json())
+        .then(data => {
+          const products = data.products;
 
-                        if (!product) {
-                            searchResults.classList.add('hidden');
-                            searchResults.innerHTML = '';
-                            return;
-                        }
+          if (!products || products.length === 0) {
+            searchResults.classList.add('hidden');
+            searchResults.innerHTML = '';
+            return;
+          }
 
-                        selectedProductGlobal = product;
+          searchResults.innerHTML = '';
 
-                        // Set hidden inputs inside this row
-                        const productInput = row.querySelector('.productInput');
-                        const productIdInput = row.querySelector('.productIdInput');
+          products.forEach(product => {
+            const item = document.createElement('div');
+            item.textContent = `${product.product} - ${product.product_detail}`;
+            item.className = "p-2 hover:bg-green-100 cursor-pointer";
 
-                        if (productInput && productIdInput) {
-                            productInput.value = product.product;
-                            productIdInput.value = product._id;
-                        }
+            item.addEventListener('click', () => {
+              selectedProductGlobal = product;
 
-                        searchResults.innerHTML = '';
-                        const item = document.createElement('div');
-                        item.textContent = `${product.product} - ${product.product_detail}`;
-                        item.className = "p-2 hover:bg-green-100 cursor-pointer";
+              searchInput.value = product.product;
+              searchResults.classList.add('hidden');
 
-                        item.addEventListener('click', () => {
-                            searchInput.value = product.product;
-                            searchResults.classList.add('hidden');
+              const productInput = row.querySelector('.productInput');
+              const productIdInput = row.querySelector('.productIdInput');
 
-                            // Only show the first variant's unitCode and quantity, disable select
-                            unitCodeSelect.innerHTML = '';
-                            if (product.variants.length > 0) {
-                                const firstVariant = product.variants[0];
-                                const option = document.createElement('option');
-                                option.value = firstVariant.unitCode;
-                                option.textContent = `${firstVariant.unitCode} - In stock: ${firstVariant.quantity}`;
-                                unitCodeSelect.appendChild(option);
+              if (productInput && productIdInput) {
+                productInput.value = product.product;
+                productIdInput.value = product._id;
+              }
 
-                                // Set supplierPrice from product root level, not variant
-                                supplierPriceInput.value = product.supplierPrice;
-                                sellPriceInput.value = firstVariant.sellPrice;
-                                inStockInput.value = firstVariant.quantity;
-                                row.dataset.variantId = firstVariant._id;
+              unitCodeSelect.innerHTML = '';
+              if (product.variants.length > 0) {
+                const firstVariant = product.variants[0];
+                const option = document.createElement('option');
+                option.value = firstVariant.unitCode;
+                option.textContent = `${firstVariant.unitCode} - In stock: ${firstVariant.quantity}`;
+                unitCodeSelect.appendChild(option);
 
-                                // unitCodeSelect.disabled = true;
-                            } else {
-                                supplierPriceInput.value = '';
-                                sellPriceInput.value = '';
-                                inStockInput.value = '';
-                                // unitCodeSelect.disabled = false;
-                            }
-                        });
-
-                        searchResults.appendChild(item);
-                        searchResults.classList.remove('hidden');
-                    })
-                    .catch(err => {
-                        console.error('Search failed', err);
-                    });
+                supplierPriceInput.value = product.supplierPrice;
+                sellPriceInput.value = firstVariant.sellPrice;
+                inStockInput.value = firstVariant.quantity;
+                row.dataset.variantId = firstVariant._id;
+              } else {
+                supplierPriceInput.value = '';
+                sellPriceInput.value = '';
+                inStockInput.value = '';
+              }
             });
-        }
 
-        document.getElementById('addVariantBtn').addEventListener('click', function () {
-            // No pre-selection check here — new row starts empty to search a new product
+            searchResults.appendChild(item);
+          });
 
-            const tableBody = document.getElementById('variantTableBody');
-            const newRow = document.createElement('tr');
-            newRow.className = 'text-gray-700 bg-white';
-            newRow.innerHTML = `
-                <td class="p-2 border border-gray-200">
-                    <input type="text" id="searchProduct" placeholder="Search Product" class="w-full border rounded px-2 py-1" />
-                    <div id="searchResults" class="mt-2 bg-white border border-gray-300 rounded-md shadow-md max-h-60 overflow-y-auto hidden absolute w-full"></div>
-                    <input type="hidden" name="product[]" class="productInput" />
-                    <input type="hidden" name="productId[]" class="productIdInput" />
-                </td>
-                <td class="p-2 border border-gray-200">
-                    <select name="unitCode[]" id="unitCode" class="w-full border rounded px-2 py-1 text-sm text-gray-700" ></select>
-                </td>
-                <td class="p-2 border border-gray-200">
-                    <input type="number" id="supplierPrice" readonly name="supplierPrice[]" placeholder="Supplier Price" class="w-full border rounded px-2 py-1" />
-                </td>
-                <td class="p-2 border border-gray-200">
-                    <input type="number" id="sellPrice" readonly name="sellPrice[]" placeholder="Sell Price" class="w-full border rounded px-2 py-1" />
-                </td>
-                <td class="p-2 border border-gray-200">
-                    <input type="number" id="inStock" disabled name="inStock[]" placeholder="In Stock" class="w-full border rounded px-2 py-1" />
-                </td>
-                <td class="p-2 border border-gray-200 flex items-center gap-2">
-                    <input type="number" name="quantity[]" placeholder="Quantity" class="w-full border rounded px-2 py-1" />
-                    <button type="button" class="removeVariantBtn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded">❌</button>
-                </td>
-            `;
-
-            tableBody.appendChild(newRow);
-            initializeSearch(newRow);
-
-            newRow.querySelector('.removeVariantBtn').addEventListener('click', () => {
-                newRow.remove();
-            });
+          searchResults.classList.remove('hidden');
+        })
+        .catch(err => {
+          console.error('Search failed', err);
         });
+    });
+  }
 
-        // Initialize search for the first row
-        initializeSearch(document.querySelector('#variantTableBody tr'));
-    </script>
+  function attachDeleteEvent(row) {
+    const deleteBtn = row.querySelector('.deleteRowBtn');
+    deleteBtn?.addEventListener('click', () => {
+      const tbody = document.getElementById('variantTableBody');
+      if (tbody.rows.length > 1) {
+        row.remove();
+      } else {
+        alert('At least one row must remain.');
+      }
+    });
+  }
+
+  function attachQtyEvent(row) {
+    const qtyInput = row.querySelector('.qtyInput');
+    qtyInput?.addEventListener('input', () => {
+      const tbody = document.getElementById('variantTableBody');
+      const isLastRow = row === tbody.lastElementChild;
+
+      if (qtyInput.value && isLastRow) {
+        const newRow = row.cloneNode(true);
+
+        // Clear inputs
+        newRow.querySelector('.searchProduct').value = '';
+        newRow.querySelector('.productInput').value = '';
+        newRow.querySelector('.productIdInput').value = '';
+        newRow.querySelector('.unitCode').innerHTML = '';
+        newRow.querySelector('.supplierPrice').value = '';
+        newRow.querySelector('.sellPrice').value = '';
+        newRow.querySelector('.inStock').value = '';
+        newRow.querySelector('.qtyInput').value = '';
+        newRow.querySelector('#searchResults').innerHTML = '';
+        newRow.querySelector('#searchResults').classList.add('hidden');
+        delete newRow.dataset.variantId;
+
+        tbody.appendChild(newRow);
+
+        // Reattach events to new row
+        initializeSearch(newRow);
+        attachDeleteEvent(newRow);
+        attachQtyEvent(newRow);
+      }
+    });
+  }
+
+  // Initial row setup
+  const firstRow = document.querySelector('#variantTableBody tr');
+  initializeSearch(firstRow);
+  attachDeleteEvent(firstRow);
+  attachQtyEvent(firstRow);
+</script>
+
+
+
 
 </div>
+
 
                             
                             

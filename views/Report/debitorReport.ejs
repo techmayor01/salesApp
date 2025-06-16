@@ -12,65 +12,111 @@
         </div>
     
         <!-- Main Content -->
-        <main class="relative top-16 p-6 overflow-auto" style="width: calc(100% - 220px)">
-          <div class="flex flex-row justify-between items-center mb-6">
-            <h1 class="text-2xl font-semibold text-gray-900">Debitor Report</h1>
-          </div>
-    
-          <!-- Filters Section -->
-          <div id="creditorsFilterBlock" class="mb-6 flex flex-wrap items-center gap-4 text-sm bg-white p-4 rounded-lg shadow-md">
-            <input type="text" id="debitorInput" placeholder="Enter Debitor Name" class="input-field" />
-    
-            <p class="font-semibold text-gray-700">Date Range</p>
-            <input type="date" id="startDate" class="input-field" />
-    
-            <span class="text-gray-500">to</span>
-            <input type="date" id="endDate" class="input-field" />
-    
-            <button id="getDebitorsBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
-              Get
-            </button>
-          </div>
-    
-          <!-- Debitors Table Section -->
-          <div id="debitorTableSection" class="hidden max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-md">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Debitor Ledger</h2>
-            <div class="overflow-x-auto">
-              <table id="debitorTable" class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-blue-50 text-blue-700">
-                  <tr>
-                    <th class="px-4 py-3 text-left font-semibold">Date</th>
-                    <th class="px-4 py-3 text-left font-semibold">Debitor</th>
-                    <th class="px-4 py-3 text-left font-semibold">Invoice No</th>
-                    <th class="px-4 py-3 text-left font-semibold">Amount</th>
-                    <th class="px-4 py-3 text-left font-semibold">Paid</th>
-                    <th class="px-4 py-3 text-left font-semibold">Balance</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 text-gray-700">
-                  <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3">2024-05-10</td>
-                    <td class="px-4 py-3">Ajayi Ltd</td>
-                    <td class="px-4 py-3">INV-045</td>
-                    <td class="px-4 py-3">₦200,000</td>
-                    <td class="px-4 py-3">₦150,000</td>
-                    <td class="px-4 py-3">₦50,000</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-    
-        </main>
+       <main class="relative top-16 p-6 overflow-auto" style="width: calc(100% - 220px)">
+  <div class="flex flex-row justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-900">Debitor Report</h1>
+  </div>
+
+  <!-- Filters Section -->
+  <form method="GET" action="/debitor-report" class="mb-6 flex flex-wrap items-center gap-4 text-sm bg-white p-4 rounded-lg shadow-md">
+    <input type="hidden" name="customerId" id="customerId" />
+
+    <input style="height: 40px; outline: none;" type="text" id="debitorInput" placeholder="Enter Debitor Name" class="input-field" autocomplete="off" />
+
+    <ul id="suggestionsList" style="bottom: 10%; width: 15%;" class="absolute bg-white border border-gray-200 shadow-md z-50 w-60 mt-1 hidden rounded-md"></ul>
+
+    <p class="font-semibold text-gray-700">Date Range</p>
+    <input type="date" name="startDate" id="startDate" class="input-field" value="<%= startDate || '' %>" />
+    <span class="text-gray-500">to</span>
+    <input type="date" name="endDate" id="endDate" class="input-field" value="<%= endDate || '' %>" />
+
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+      Get
+    </button>
+  </form>
+
+  <!-- Debitors Table Section -->
+  <% if (entries && entries.length > 0) { %>
+  <div style="width: 100%; padding: 20px;" id="debitorTableSection" class="mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2"><%= entries[0]?.customer?.customer_name || 'Debitor Ledger' %></h2>
+    <div class="overflow-x-auto">
+      <table id="debitorTable" class="min-w-full divide-y divide-gray-200 text-sm border border-gray-300">
+        <thead class="bg-blue-50 text-blue-700">
+          <tr>
+            <th class="px-4 border py-3 text-left font-semibold">Date</th>
+            <th class="px-4 border py-3 text-left font-semibold">Debitor</th>
+            <th class="px-4 border py-3 text-left font-semibold">Type</th>
+            <th class="px-4 border py-3 text-left font-semibold">Invoice/Receipt No</th>
+            <th class="px-4 border py-3 text-left font-semibold">Amount</th>
+            <th class="px-4 border py-3 text-left font-semibold">Paid</th>
+            <th class="px-4 border py-3 text-left font-semibold">Balance</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 text-gray-700">
+          <% entries.forEach(entry => { %>
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-4 border py-3"><%= new Date(entry.date).toISOString().slice(0, 10) %></td>
+              <td class="px-4 border py-3"><%= entry.customer?.customer_name || "N/A" %></td>
+              <td class="px-4 border py-3"><%= entry.type || "-" %></td>
+              <td class="px-4 border py-3"><%= entry.refNo || "-" %></td>
+              <td class="px-4 border py-3"><%= entry.type === 'debit' ? '₦' + entry.amount.toLocaleString() : '-' %></td>
+              <td class="px-4 border py-3">₦<%= entry.paid.toLocaleString() %></td>
+              <td class="px-4 border py-3">₦<%= entry.balance.toLocaleString() %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <% } %>
+</main>
+
       </div>
     </div>
+    <%- include ('../partials/footer') %>
     
-    <!-- Styling Shortcuts -->
-    <style>
-      .input-field {
-        @apply border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500;
-      }
-    </style>
+  <script>
+  const debitorInput = document.getElementById("debitorInput");
+  const customerIdInput = document.getElementById("customerId");
+  const suggestionsList = document.getElementById("suggestionsList");
+
+  debitorInput.addEventListener("input", function () {
+    const query = this.value.trim();
+    if (!query) {
+      suggestionsList.innerHTML = "";
+      suggestionsList.classList.add("hidden");
+      return;
+    }
+
+    fetch(`/api/customers/suggest?q=${encodeURIComponent(query)}`)
+      .then(res => res.json())
+      .then(customers => {
+        suggestionsList.innerHTML = "";
+        if (customers.length === 0) {
+          suggestionsList.classList.add("hidden");
+          return;
+        }
+
+        customers.forEach(customer => {
+          const li = document.createElement("li");
+          li.textContent = customer.customer_name;
+          li.dataset.id = customer._id;
+          li.className = "px-4 py-2 hover:bg-blue-100 cursor-pointer";
+
+          li.addEventListener("click", () => {
+            debitorInput.value = customer.customer_name;
+            customerIdInput.value = customer._id;
+            suggestionsList.classList.add("hidden");
+          });
+
+          suggestionsList.appendChild(li);
+        });
+
+        suggestionsList.classList.remove("hidden");
+      });
+  });
+</script>
+
     
     <script>
       document.addEventListener("DOMContentLoaded", () => {
@@ -81,6 +127,22 @@
           tableSection.classList.remove("hidden");
         });
       });
+    </script>
+
+
+    <script>
+      $(document).ready(function () {
+          $("#debitorTable").DataTable({
+            responsive: true,
+            scrollX: false,
+            dom: "Bfrtip",
+            buttons: ["copy", "excel", "csv", "pdf", "print"],
+            language: {
+              searchPlaceholder: "Search invoice...",
+              search: "",
+            },
+          });
+        });
     </script>
     
   </body>
